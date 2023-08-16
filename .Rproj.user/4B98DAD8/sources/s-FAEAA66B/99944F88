@@ -12,18 +12,18 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "490,45",
-        "scrollLine": "295",
+        "cursorPosition": "44,0",
+        "scrollLine": "37",
         "docOutlineVisible": "1",
         "rmdVisualCollapsedChunks": "",
         "docOutlineSize": "180"
     },
     "folds": "",
-    "lastKnownWriteTime": 1692124670,
+    "lastKnownWriteTime": 1692189521,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1692124670119,
+    "last_content_update": 1692189521385,
     "read_only": false,
     "read_only_alternatives": []
 }

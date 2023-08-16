@@ -77,58 +77,19 @@ if (run.local == FALSE ) {
   setwd(path)
   source("helper_IWN.R")
   
-  # ~~ Cluster Run ----------------------------------------
   
-  if ( interactive.cluster.run == FALSE ) {
-    # get scen parameters (made by genSbatch.R)
-    setwd(path)
-    scen.params = read.csv( "scen_params.csv" )
-    p <<- scen.params[ scen.params$scen == scen, ]
-    
-    cat("\n\nHEAD OF ENTIRE SCEN.PARAMS:\n")
-    print(p)
-  }
+  # get scen parameters (made by genSbatch.R)
+  setwd(path)
+  scen.params = read.csv( "scen_params.csv" )
+  p <<- scen.params[ scen.params$scen == scen, ]
   
-  # ~~ Set Sim Params: Interactive Cluster Run ----------------------------------------
-  # alternatively, generate a simple scen.params in order to run doParallel manually in
-  # Sherlock as a test
-  if ( interactive.cluster.run == TRUE ) {
-    path = "/home/groups/manishad/IWN"
-    setwd(path)
-    source("helper_IWN.R")
-    
-    scen.params = tidyr::expand_grid(
-      
-      # methods to run for each simulation rep
-      rep.methods = "gold-std ; CC-adj ; CC-unadj ; MI-adj ; MI-unadj",
-      model = "OLS",
-      
-      dag_name = c( "I(c)" ),
-      N = c(10^4),
-      # true OLS coefficient of A on Y
-      betaAY = c(1),
-      # OLS coeff of C on Y or vice versa
-      betaCY = c(1),
-      # OLS coef of A on C, if applicable
-      betaAC = c(1),
-      # logistic regression coef of C on R
-      betaCR = c(1),
-      
-      # which var(s) should be missing?
-      # options: "c('A', 'Y', 'C'), c('A'), c('Y')"
-      missing_vars = c( "c('A', 'Y')" )  # quotation marks must be single inside double
-    )
-    
-    scen.params$scen = 1:nrow(scen.params)
-    
-    scen = 1
-  }  # end "if ( interactive.cluster.run == TRUE )"
+  cat("\n\nHEAD OF ENTIRE SCEN.PARAMS:\n")
+  print(p)
   
-
+  
   # simulation reps to run within this job
   # **this need to match n.reps.in.doParallel in the genSbatch script
-  if ( interactive.cluster.run == FALSE ) sim.reps = 10
-  if ( interactive.cluster.run == TRUE ) sim.reps = 1  
+  sim.reps = 1
   
   # set the number of cores
   registerDoParallel(cores=16)
@@ -158,15 +119,15 @@ if ( run.local == TRUE ) {
   
   # ~~ ********** Set Sim Params: Local Run -----------------------------
   
-    # FOR RUNNING 1 SCEN
+  # FOR RUNNING 1 SCEN
   scen.params = tidyr::expand_grid(
-
+    
     rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; Am-ours",
     model = "OLS",
     
     imp_m = 50,
     imp_maxit = 100,
-
+    
     beta = 0, #@HARD-CODED for now to match mean(A1) in DAG 1B
     dag_name = c( "1B" ),
     N = c(4000) 
@@ -283,9 +244,9 @@ for ( scen in scens_to_run ) {
       if ( "MICE-std" %in% all.methods ) {
         
         imps_mice_std = mice( di_std,
-                     maxit = p$imp_maxit,
-                     m = p$imp_m )
-  
+                              maxit = p$imp_maxit,
+                              m = p$imp_m )
+        
         # sanity check
         imp1 = complete(imps_mice_std, 1)
         
@@ -298,8 +259,8 @@ for ( scen in scens_to_run ) {
       if ( "MICE-ours" %in% all.methods ) {
         
         imps_mice_ours = mice( di_ours,
-                              maxit = p$imp_maxit,
-                              m = p$imp_m )
+                               maxit = p$imp_maxit,
+                               m = p$imp_m )
         
         # sanity check
         imp1 = complete(imps_mice_ours, 1)
@@ -312,7 +273,7 @@ for ( scen in scens_to_run ) {
       
       if ( "Am-std" %in% all.methods ) {
         imps_am_std = amelia( as.data.frame(di_std),
-                                m=p$imp_m)
+                              m=p$imp_m)
         
         # check for problems
         if ( any(is.na((imps_am_std$imputations$imp1))) ) stop("MI left NAs in dataset - what a butt")
@@ -323,7 +284,7 @@ for ( scen in scens_to_run ) {
       
       if ( "Am-ours" %in% all.methods ) {
         imps_am_ours = amelia( as.data.frame(di_ours),
-                              m=p$imp_m)
+                               m=p$imp_m)
         
         # check for problems
         if ( any(is.na((imps_am_ours$imputations$imp1))) ) stop("MI left NAs in dataset - what a butt")

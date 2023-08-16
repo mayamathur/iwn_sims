@@ -16,9 +16,7 @@ allPackages = c("here",
                 "tibble",
                 "testthat",
                 "Hmisc",
-                "stringr",
-                "mice",
-                "Amelia")
+                "stringr")
 
 ( packagesNeeded = allPackages[ !( allPackages %in% installed.packages()[,"Package"] ) ] )
 if( length(packagesNeeded) > 0 ) install.packages(packagesNeeded)
@@ -69,8 +67,8 @@ write.csv( scen.params, "scen_params.csv", row.names = FALSE )
 source("helper_IWN.R")
 
 # number of sbatches to generate (i.e., iterations within each scenario)
-n.reps.per.scen = 10
-n.reps.in.doParallel = 10  
+n.reps.per.scen = 1
+n.reps.in.doParallel = 1
 ( n.files = ( n.reps.per.scen / n.reps.in.doParallel ) * n.scen )
 
 
@@ -78,15 +76,15 @@ path = "/home/groups/manishad/IWN"
 
 scen.name = rep( scen.params$scen, each = ( n.files / n.scen ) )
 jobname = paste("job", 1:n.files, sep="_")
-outfile = paste("rm_", 1:n.files, ".out", sep="")
-errorfile = paste("rm_", 1:n.files, ".err", sep="")
+outfile = paste("/home/groups/manishad/IWN/rmfiles/rm_", 1:n.files, ".out", sep="")
+errorfile = paste("/home/groups/manishad/IWN/rmfiles/rm_", 1:n.files, ".err", sep="")
 write_path = paste(path, "/sbatch_files/", 1:n.files, ".sbatch", sep="")
 runfile_path = paste(path, "/testRunFile.R", sep="")
 
 sbatch_params <- data.frame(jobname,
                             outfile,
                             errorfile,
-                            jobtime = "00:30:00", 
+                            jobtime = "00:10:00", 
                             quality = "normal",
                             node_number = 1,
                             mem_per_node = 64000,
