@@ -128,8 +128,7 @@ if ( run.local == TRUE ) {
     imp_m = 50,
     imp_maxit = 100,
     
-    beta = 0, #@HARD-CODED for now to match mean(A1) in DAG 1B
-    dag_name = c( "1B" ),
+    dag_name = c( "1A" ),
     N = c(4000) 
   )
   
@@ -236,6 +235,8 @@ for ( scen in scens_to_run ) {
       di_ours = sim_obj$di_ours
       ( form_string = as.character( sim_obj$form_string ) )
       ( gold_form_string = as.character( sim_obj$gold_form_string ) )
+      ( beta = as.numeric(sim_obj$beta) )
+      ( coef_of_interest = as.character( sim_obj$coef_of_interest ) )
       
       # ~ Make Imputed Data ------------------------------
       
@@ -309,7 +310,10 @@ for ( scen in scens_to_run ) {
                                   
                                   method.fn = function(x) fit_regression(form_string = gold_form_string,
                                                                          model = p$model,
-                                                                         coef_of_interest = "(Intercept)",
+                                                                         # *this assumes coef_of_interest is always the factual variable
+                                                                         #  (e.g., A), so need to add "1" to use the variable
+                                                                         # that's in gold-standard model
+                                                                         coef_of_interest = paste(coef_of_interest, "1", sep = ""),
                                                                          miss_method = "gold",
                                                                          du = du,
                                                                          imps = NULL),
@@ -325,7 +329,7 @@ for ( scen in scens_to_run ) {
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
                                                                          model = p$model,
-                                                                         coef_of_interest = "(Intercept)",
+                                                                         coef_of_interest = coef_of_interest,
                                                                          miss_method = "MI",
                                                                          du = NULL,
                                                                          imps = imps_mice_std),
@@ -341,7 +345,7 @@ for ( scen in scens_to_run ) {
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
                                                                          model = p$model,
-                                                                         coef_of_interest = "(Intercept)",
+                                                                         coef_of_interest = coef_of_interest,
                                                                          miss_method = "MI",
                                                                          du = NULL,
                                                                          imps = imps_mice_ours),
@@ -358,7 +362,7 @@ for ( scen in scens_to_run ) {
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
                                                                          model = p$model,
-                                                                         coef_of_interest = "(Intercept)",
+                                                                         coef_of_interest = coef_of_interest,
                                                                          miss_method = "MI",
                                                                          du = NULL,
                                                                          imps = imps_am_std),
@@ -374,7 +378,7 @@ for ( scen in scens_to_run ) {
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
                                                                          model = p$model,
-                                                                         coef_of_interest = "(Intercept)",
+                                                                         coef_of_interest = coef_of_interest,
                                                                          miss_method = "MI",
                                                                          du = NULL,
                                                                          imps = imps_am_ours),
@@ -393,7 +397,11 @@ for ( scen in scens_to_run ) {
       #  have more columns than others
       rep.res = p %>% bind_cols( rep.res )
       
-      rep.res$bhat_covers = covers(truth = p$beta,
+      # these don't come from p because they are from sim_data instead
+      rep.res$coef_of_interest = coef_of_interest
+      rep.res$beta = beta
+      
+      rep.res$bhat_covers = covers(truth = beta,
                                    rep.res$bhat_lo,
                                    rep.res$bhat_hi)
       

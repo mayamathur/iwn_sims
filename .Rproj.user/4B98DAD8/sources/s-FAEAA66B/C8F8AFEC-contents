@@ -52,9 +52,47 @@ sim_data = function(.p) {
   if (.p$model != "OLS" ) stop("Only handles model OLS for now")
   
   
-  # 1 analysis variable with collider
+  # ~ DAG 1A -----------------------------
+  if ( .p$dag_name == "1A" ) {
+    du = data.frame( A1 = rnorm( n = .p$N ) )
+    
+    du = du %>% rowwise() %>%
+      mutate( Y1 = rnorm( n = 1,
+                          mean(1*A1) ),
+              
+              RA = rbinom( n = 1,
+                           prob = expit(1*Y1),
+                           size = 1 ),
+              
+              A = ifelse(RA == 0, NA, A1),
+              Y = Y1 )
+    
+    
+    
+    # make dataset for imputation (standard way: no R variables)
+    di_std = du %>% select(A, Y)
+    
+    # and for our imputation
+    # here, backdoor criterion holds conditional on nothing
+    di_ours = du %>% select(A, Y, RA)
+    
+    # regression strings
+    form_string = "Y ~ A"
+    
+    # gold-standard model uses underlying variables
+    gold_form_string = "Y1 ~ A1"
+    
+    # coefficient and estimand of interest: betaAY
+    coef_of_interest = "A"
+    beta = 1
+    
+    
+  }  # end of .p$dag_name == "1A"
   
+
   # ~ DAG 1B -----------------------------
+  # 1 analysis variable with RA-A collider
+  
   if ( .p$dag_name == "1B" ) {
     du = data.frame( U1 = rnorm( n = .p$N ),
                      U2 = rnorm( n = .p$N ),
@@ -88,6 +126,11 @@ sim_data = function(.p) {
     # gold-standard model uses underlying variables
     gold_form_string = "A1 ~ 1"
     
+    # coef and estimand of interest: mean(A)
+    coef_of_interest = "(Intercept)"
+    beta = 0
+    
+    
   }  # end of .p$dag_name == "1B"
   
   
@@ -107,7 +150,9 @@ sim_data = function(.p) {
                 di_std,
                 di_ours,
                 form_string,
-                gold_form_string) )
+                gold_form_string,
+                coef_of_interest,
+                beta) )
   
 }
 
