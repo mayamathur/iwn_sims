@@ -53,6 +53,8 @@ sim_data = function(.p) {
   
   
   # 1 analysis variable with collider
+  
+  # ~ DAG 1B -----------------------------
   if ( .p$dag_name == "1B" ) {
     du = data.frame( U1 = rnorm( n = .p$N ),
                      U2 = rnorm( n = .p$N ),

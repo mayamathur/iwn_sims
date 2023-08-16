@@ -43,7 +43,7 @@ library(testthat)
 #                  .stitch.file.name="stitched.csv")
 
 .results.singles.path = "/home/groups/manishad/IWN/long_results"
-.results.stitched.write.path = "/home/groups/manishad/IWN/stitched_results"
+.results.stitched.write.path = "/home/groups/manishad/IWN/overall_stitched"
 .name.prefix = "long_results"
 .stitch.file.name="stitched.csv"
 
@@ -114,6 +114,22 @@ system(string)
 
 
 
+# Quick Look ----------------------------------------------
+
+correct.order = c("gold", "Am-std", "Am-ours", "MICE-std", "MICE-ours")
+s$method = factor(s$method, levels = correct.order)
+
+s %>% group_by(scen.name, method) %>%
+  summarise( reps = n(),
+             BhatBias = meanNA(bhat - beta),
+             BhatLo = meanNA(bhat_lo),
+             BhatHi = meanNA(bhat_hi),
+             BhatCover = meanNA(bhat_covers)) %>%
+  arrange() %>%
+  mutate_if(is.numeric, function(x) round(x,2)) 
+  
+
+
 
 # MAKE AGG DATA ----------------------------------------------
 
@@ -160,9 +176,9 @@ as.data.frame(t)
 ##### Move to Local #####
 
 # # stitched and agg -> local directory
-# scp mmathur@login.sherlock.stanford.edu:/home/groups/manishad/IWN/stitched_results/* /Users/mmathur/Dropbox/Personal computer/Independent studies/*Inchoate/2022/IWN/Linked to OSF (IWN)/Simulation study/Data
+# scp mmathur@login.sherlock.stanford.edu:/home/groups/manishad/IWN/overall_stitched/* /Users/mmathur/Dropbox/Personal computer/Independent studies/*Inchoate/2022/IWN/Linked to OSF (IWN)/Simulation study/Data
 
-# scp mmathur@login.sherlock.stanford.edu:/home/groups/manishad/IWN/stitched_results/* /Users/mmathur/Dropbox/Personal\ computer/Independent\ studies/\*Inchoate/2022/IWN/Linked\ to\ OSF\ \(IWN\)/Simulation\ study/Data
+# scp mmathur@login.sherlock.stanford.edu:/home/groups/manishad/IWN/overall_stitched/* /Users/mmathur/Dropbox/Personal\ computer/Independent\ studies/\*Inchoate/2022/IWN/Linked\ to\ OSF\ \(IWN\)/Simulation\ study/Data
 
 
 
