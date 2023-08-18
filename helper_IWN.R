@@ -239,26 +239,26 @@ sim_data = function(.p) {
     exclude_from_imp_model = "B"
     
     ### For association
+    # regression strings
+    form_string = "B ~ A"
+
+    # gold-standard model uses underlying variables
+    gold_form_string = "B1 ~ A1"
+
+    # coef and estimand of interest
+    coef_of_interest = "A"
+    beta = NA # wrong b/c they're spuriously associated
+    
+    # ### For just intercept of A
     # # regression strings
-    # form_string = "B ~ A"
+    # form_string = "A ~ 1"
     # 
     # # gold-standard model uses underlying variables
-    # gold_form_string = "B1 ~ A1"
+    # gold_form_string = "A1 ~ 1"
     # 
-    # # coef and estimand of interest
-    # coef_of_interest = "A"
-    # beta = NA # wrong b/c they're spuriously associated
-    
-    ### For just intercept of A
-    # regression strings
-    form_string = "A ~ 1"
-    
-    # gold-standard model uses underlying variables
-    gold_form_string = "A1 ~ 1"
-    
-    # coef and estimand of interest: mean(A)
-    coef_of_interest = "(Intercept)"
-    beta = 0
+    # # coef and estimand of interest: mean(A)
+    # coef_of_interest = "(Intercept)"
+    # beta = 0
     
     
   }  # end of .p$dag_name == "1D"

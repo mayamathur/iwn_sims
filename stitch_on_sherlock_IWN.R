@@ -121,6 +121,8 @@ t = s %>% group_by(scen.name, method) %>%
   arrange() %>%
   mutate_if(is.numeric, function(x) round(x,2)) 
 
+as.data.frame(t)
+
 path = "/home/groups/manishad/IWN/overall_stitched"
 setwd(path)
 fwrite(t, "temp_agg.csv")
