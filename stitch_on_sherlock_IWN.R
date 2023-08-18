@@ -110,7 +110,7 @@ s = s %>% filter(!is.na(scen.name))
 correct.order = c("gold", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
 s$method = factor(s$method, levels = correct.order)
 
-s %>% group_by(scen.name, method) %>%
+t = s %>% group_by(scen.name, method) %>%
   summarise( reps = n(),
              Bhat = meanNA(bhat),
              BhatBias = meanNA(bhat - beta),
@@ -121,7 +121,9 @@ s %>% group_by(scen.name, method) %>%
   arrange() %>%
   mutate_if(is.numeric, function(x) round(x,2)) 
 
-
+path = "/home/groups/manishad/IWN/overall_stitched"
+setwd(path)
+fwrite(t, "temp_agg.csv")
 
 
 # ~ Write stitched.csv ---------------------------

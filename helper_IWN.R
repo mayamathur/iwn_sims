@@ -205,7 +205,8 @@ sim_data = function(.p) {
   if ( .p$dag_name == "1D" ) {
   
     du = data.frame( U1 = rnorm( n = .p$N ),
-                     U2 = rnorm( n = .p$N ) )
+                     U2 = rnorm( n = .p$N ),
+                     C1 = rnorm( n = .p$N ) )
     
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
@@ -229,10 +230,10 @@ sim_data = function(.p) {
     
     
     # make dataset for imputation (standard way: all measured variables)
-    di_std = du %>% select(A, B)
+    di_std = du %>% select(A, B, C1)
     
     # and for our imputation
-    di_ours = NULL
+    di_ours = du %>% select(A, C1)
     
     # custom predictor matrix for MICE-ours-pred
     exclude_from_imp_model = "B"

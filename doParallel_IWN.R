@@ -129,7 +129,7 @@ if ( run.local == TRUE ) {
     imp_m = 50,
     imp_maxit = 100,
     
-    dag_name = c( "1D" ),
+    dag_name = c( "1E" ),
     N = c(4000) 
   )
   
