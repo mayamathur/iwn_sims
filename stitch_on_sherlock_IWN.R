@@ -103,15 +103,6 @@ if ( any(is.na(names(s))) ) {
 
 s = s %>% filter(!is.na(scen.name))
 
-# ~ Write stitched.csv ---------------------------
-
-setwd(.results.stitched.write.path)
-fwrite(s, .stitch.file.name)
-
-# also make a zipped version
-string = paste("zip -m stitched.zip", .stitch.file.name)
-system(string)
-
 
 
 # Quick Look ----------------------------------------------
@@ -127,7 +118,19 @@ s %>% group_by(scen.name, method) %>%
              BhatCover = meanNA(bhat_covers)) %>%
   arrange() %>%
   mutate_if(is.numeric, function(x) round(x,2)) 
-  
+
+
+
+
+# ~ Write stitched.csv ---------------------------
+
+setwd(.results.stitched.write.path)
+fwrite(s, .stitch.file.name)
+
+# also make a zipped version
+string = paste("zip -m stitched.zip", .stitch.file.name)
+system(string)
+
 
 
 

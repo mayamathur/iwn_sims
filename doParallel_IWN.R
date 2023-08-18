@@ -19,7 +19,7 @@ run.local = FALSE
 interactive.cluster.run = FALSE
 
 # should lots of output be printed for each sim rep?
-verbose = TRUE
+verbose = FALSE
 
 # ~~ Packages -----------------------------------------------
 toLoad = c("crayon",
@@ -89,7 +89,7 @@ if (run.local == FALSE ) {
   
   # simulation reps to run within this job
   # **this need to match n.reps.in.doParallel in the genSbatch script
-  sim.reps = 100
+  sim.reps = 50
   
   # set the number of cores
   registerDoParallel(cores=16)
@@ -122,13 +122,14 @@ if ( run.local == TRUE ) {
   # FOR RUNNING 1 SCEN
   scen.params = tidyr::expand_grid(
     
-    rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; Am-ours",
+    #rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+    rep.methods = "gold ; MICE-std ; MICE-ours ; MICE-ours-pred",
     model = "OLS",
     
     imp_m = 50,
     imp_maxit = 100,
     
-    dag_name = c( "1A" ),
+    dag_name = c( "1B" ),
     N = c(4000) 
   )
   
@@ -222,8 +223,8 @@ for ( scen in scens_to_run ) {
       if ( i == 1 & verbose == TRUE) cat("\n\nDIM AND HEAD OF P (SINGLE ROW OF SCEN.PARAMS):\n")
       
       # parse methods string
-      all.methods = unlist( strsplit( x = p$rep.methods,
-                                      split = " ; " ) )
+      ( all.methods = unlist( strsplit( x = p$rep.methods,
+                                      split = " ; " ) ) )
       
       
       # ~ Simulate Dataset ------------------------------
@@ -237,6 +238,19 @@ for ( scen in scens_to_run ) {
       ( gold_form_string = as.character( sim_obj$gold_form_string ) )
       ( beta = as.numeric(sim_obj$beta) )
       ( coef_of_interest = as.character( sim_obj$coef_of_interest ) )
+      
+      
+      # coefficient of interest for gold-standard model
+      if ( coef_of_interest == "(Intercept)" ){
+        coef_of_interest_gold = "(Intercept)"
+      } else {
+        # *this assumes coef_of_interest is always the factual variable
+        #  (e.g., A), so need to add "1" to use the variable
+        # that's in gold-standard model
+        coef_of_interest_gold = paste(coef_of_interest, "1", sep = "")
+      }
+      
+  
       
       # ~ Make Imputed Data ------------------------------
       
@@ -256,13 +270,13 @@ for ( scen in scens_to_run ) {
         imps_mice_std = NULL
       }
       
-      
+      # MICE by restricting dataset
       if ( "MICE-ours" %in% all.methods ) {
         
         imps_mice_ours = mice( di_ours,
                                maxit = p$imp_maxit,
                                m = p$imp_m )
-        
+   
         # sanity check
         imp1 = complete(imps_mice_ours, 1)
         
@@ -270,6 +284,34 @@ for ( scen in scens_to_run ) {
       } else {
         imps_mice_ours = NULL
       }
+      
+      # MICE by adjusting predictor matrix
+      if ( "MICE-ours-pred" %in% all.methods ) {
+        
+        # modify predictor matrix instead of restricting dataset
+        ini = mice(di_std, maxit=0)
+        pred = ini$predictorMatrix
+        # don't allow B1 in the imputation model
+        exclude_from_imp_model = "B1"
+        pred[,exclude_from_imp_model] = 0
+        #@LATER need the DAG itself to pass exclude_from_imp_model
+        
+        
+        imps_mice_ours_pred = mice( di_std,
+                               predictorMatrix = pred,
+                               maxit = p$imp_maxit,
+                               m = p$imp_m )
+        
+        # sanity check
+        imp1 = complete(imps_mice_ours_pred, 1)
+        
+        if ( any(is.na(imp1)) ) stop("MI left NAs in dataset - what a butt")
+      } else {
+        imps_mice_ours_pred = NULL
+      }
+      
+      
+      
       
       
       if ( "Am-std" %in% all.methods ) {
@@ -293,6 +335,7 @@ for ( scen in scens_to_run ) {
         imps_am_ours = NULL
       }
       
+  
       
       # ~ Initialize Global Vars ------------------------------
       
@@ -313,7 +356,7 @@ for ( scen in scens_to_run ) {
                                                                          # *this assumes coef_of_interest is always the factual variable
                                                                          #  (e.g., A), so need to add "1" to use the variable
                                                                          # that's in gold-standard model
-                                                                         coef_of_interest = paste(coef_of_interest, "1", sep = ""),
+                                                                         coef_of_interest = coef_of_interest_gold,
                                                                          miss_method = "gold",
                                                                          du = du,
                                                                          imps = NULL),
@@ -322,6 +365,8 @@ for ( scen in scens_to_run ) {
       
       if (run.local == TRUE) srr(rep.res)
       
+  
+      #bm: Will need to adjust imputation dataset for ours, because I think what you actually want is to exclude Y from imp model but not from dataset?
       
       # ~~ MICE-std ----
       if ( "MICE-std" %in% all.methods ) {
@@ -356,6 +401,24 @@ for ( scen in scens_to_run ) {
       
       
       
+      # ~~ MICE-ours-pred ----
+      if ( "MICE-ours-pred" %in% all.methods ) {
+        rep.res = run_method_safe(method.label = c("MICE-ours-pred"),
+                                  
+                                  method.fn = function(x) fit_regression(form_string = form_string,
+                                                                         model = p$model,
+                                                                         coef_of_interest = coef_of_interest,
+                                                                         miss_method = "MI",
+                                                                         du = NULL,
+                                                                         imps = imps_mice_ours_pred),
+                                  .rep.res = rep.res )
+      }
+      
+      if (run.local == TRUE) srr(rep.res)
+      
+      
+      
+      
       # ~~ Am-std ----
       if ( "Am-std" %in% all.methods ) {
         rep.res = run_method_safe(method.label = c("Am-std"),
@@ -386,6 +449,7 @@ for ( scen in scens_to_run ) {
       }
       
       if (run.local == TRUE) srr(rep.res)
+      
       
       
       

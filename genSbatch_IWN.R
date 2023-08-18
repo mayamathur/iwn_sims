@@ -40,8 +40,7 @@ scen.params = tidyr::expand_grid(
   imp_m = 50,
   imp_maxit = 100,
   
-  beta = 0, #@HARD-CODED for now to match mean(A1) in DAG 1B
-  dag_name = c( "1B" ),
+  dag_name = c( "1C" ),
   N = c(4000) 
 )
 
@@ -68,7 +67,7 @@ source("helper_IWN.R")
 
 # number of sbatches to generate (i.e., iterations within each scenario)
 n.reps.per.scen = 1000
-n.reps.in.doParallel = 100
+n.reps.in.doParallel = 50
 ( n.files = ( n.reps.per.scen / n.reps.in.doParallel ) * n.scen )
 
 
@@ -108,7 +107,7 @@ n.files
 # xxx files
 path = "/home/groups/manishad/IWN"
 setwd( paste(path, "/sbatch_files", sep="") )
-for (i in 2:9) {
+for (i in 1:20) {
   system( paste("sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/", i, ".sbatch", sep="") )
 }
 
