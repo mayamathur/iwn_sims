@@ -122,7 +122,7 @@ if ( run.local == TRUE ) {
   # FOR RUNNING 1 SCEN
   scen.params = tidyr::expand_grid(
     
-    rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+    rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
     #rep.methods = "gold ; MICE-std ; MICE-ours ; MICE-ours-pred",
     model = "OLS",
     
@@ -255,10 +255,13 @@ for ( scen in scens_to_run ) {
       
       # ~ Make Imputed Data ------------------------------
       
+      #bm: need to put each of these in tryCatch loop
+      
+      # ~~ MICE-std ----
       # details of how mice() implements pmm:
       # ?mice.impute.pmm
       if ( "MICE-std" %in% all.methods & !is.null(di_std) ) {
-        
+    
         imps_mice_std = mice( di_std,
                               maxit = p$imp_maxit,
                               m = p$imp_m,
@@ -267,11 +270,16 @@ for ( scen in scens_to_run ) {
         # sanity check
         imp1 = complete(imps_mice_std, 1)
         
-        if ( any(is.na(imp1)) ) stop("MI left NAs in dataset - what a butt")
+        if ( any(is.na(imp1)) ) {
+          message("MI left NAs in dataset - what a butt")
+          imps_mice_std = NULL
+        }
+ 
       } else {
         imps_mice_std = NULL
       }
       
+      # ~~ MICE-ours ----
       # MICE by restricting dataset
       if ( "MICE-ours" %in% all.methods & !is.null(di_ours) ) {
         
@@ -283,11 +291,17 @@ for ( scen in scens_to_run ) {
         # sanity check
         imp1 = complete(imps_mice_ours, 1)
         
-        if ( any(is.na(imp1)) ) stop("MI left NAs in dataset - what a butt")
+        if ( any(is.na(imp1)) ) {
+          message("MI left NAs in dataset - what a butt")
+          imps_mice_ours = NULL
+        }
+        
       } else {
         imps_mice_ours = NULL
       }
       
+      
+      # ~~ MICE-ours-pred ----
       # MICE by adjusting predictor matrix
       if ( "MICE-ours-pred" %in% all.methods & !is.null(di_std) ) {
         
@@ -305,7 +319,11 @@ for ( scen in scens_to_run ) {
         # sanity check
         imp1 = complete(imps_mice_ours_pred, 1)
         
-        if ( any(is.na(imp1)) ) stop("MI left NAs in dataset - what a butt")
+        if ( any(is.na(imp1)) ) {
+          message("MI left NAs in dataset - what a butt")
+          imps_mice_ours_pred = NULL
+        }
+        
       } else {
         imps_mice_ours_pred = NULL
       }
@@ -313,7 +331,7 @@ for ( scen in scens_to_run ) {
       
       
       
-      
+      # ~~ Am-std ----
       if ( "Am-std" %in% all.methods & !is.null(di_std) ) {
         
         imps_am_std = amelia( as.data.frame(di_std),
@@ -321,9 +339,15 @@ for ( scen in scens_to_run ) {
                               p2s = 0 # don't print output
         )
         
-        # check for problems
-        #@need to make this a tryCatch loop, as in run_method_safe
-        if ( any(is.na((imps_am_std$imputations$imp1))) ) stop("MI left NAs in dataset - what a butt")
+
+        imp1 = imps_am_std$imputations$imp1
+        
+        if ( any(is.na(imp1)) ) {
+          message("MI left NAs in dataset - what a butt")
+          imps_am_std = NULL
+        }
+        
+        
       } else {
         imps_am_std = NULL
       }
@@ -335,8 +359,13 @@ for ( scen in scens_to_run ) {
                                p2s = 0 # don't print output
         )
         
-        # check for problems
-        if ( any(is.na((imps_am_ours$imputations$imp1))) ) stop("MI left NAs in dataset - what a butt")
+        imp1 = imps_am_ours$imputations$imp1
+        
+        if ( any(is.na(imp1)) ) {
+          message("MI left NAs in dataset - what a butt")
+          imps_am_ours = NULL
+        }
+        
       } else {
         imps_am_ours = NULL
       }
@@ -365,6 +394,25 @@ for ( scen in scens_to_run ) {
                                                                          coef_of_interest = coef_of_interest_gold,
                                                                          miss_method = "gold",
                                                                          du = du,
+                                                                         imps = NULL),
+                                  .rep.res = rep.res )
+      }
+      
+      if (run.local == TRUE) srr(rep.res)
+      
+      
+      # ~~ Complete-case analysis (naive) ----
+      if ( "CC" %in% all.methods ) {
+        rep.res = run_method_safe(method.label = c("CC"),
+                                  
+                                  method.fn = function(x) fit_regression(form_string = form_string,
+                                                                         model = p$model,
+                                                                         # *this assumes coef_of_interest is always the factual variable
+                                                                         #  (e.g., A), so need to add "1" to use the variable
+                                                                         # that's in gold-standard model
+                                                                         coef_of_interest = coef_of_interest,
+                                                                         miss_method = "CC",
+                                                                         du = di_std,
                                                                          imps = NULL),
                                   .rep.res = rep.res )
       }

@@ -199,8 +199,8 @@ sim_data = function(.p) {
   
   
   # ~ DAG 1D -----------------------------
-  # similar to 1B, but now B is an analysis variable and 
-  #  has its own missingness, so restricting the dataset to exclude it from imputation doesn't work
+  # similar to 1B, but now B has its own missingness, so restricting
+  #  the dataset to exclude it from imputation doesn't work
   
   if ( .p$dag_name == "1D" ) {
   
@@ -264,6 +264,81 @@ sim_data = function(.p) {
   
   
   
+  # ~ DAG 1E -----------------------------
+  # similar to 1D, but now there's another backdoor path and we want the A-B association
+  
+  if ( .p$dag_name == "1E" ) {
+    
+    du = data.frame( U1 = rnorm( n = .p$N ),
+                     U2 = rnorm( n = .p$N ),
+                     U3 = rnorm( n = .p$N ),
+                     # C1 is to prevent having no vars in predictor matrix
+                     C1 = rnorm( n = .p$N ) )
+    
+    #**IMPORTANT: this DAG has beta (below) estimated empirically.
+    # if any parameters below change, you'll need to re-estimate it.
+    du = du %>% rowwise() %>%
+      mutate( A1 = rnorm( n = 1,
+                          mean(1*U1 + 1*U3) ),
+              
+              B1 = rnorm( n = 1,
+                          mean(1*U1 + 1*U2) ),
+              
+              RA = rbinom( n = 1,
+                           prob = expit(1*U2),
+                           size = 1 ),
+              RB = rbinom( n = 1,
+                           prob = expit(1*U3),
+                           size = 1 ),
+              #*interestingly, intercept of A less biased for standard MI methods when there is MORE missingness on B
+              #  I guess this is because it plays less role in imputation model?
+              
+              A = ifelse(RA == 0, NA, A1),
+              B = ifelse(RB == 0, NA, B1) )
+    
+    
+    
+    # make dataset for imputation (standard way: all measured variables)
+    di_std = du %>% select(A, B, C1)
+    
+    # and for our imputation
+    di_ours = NULL
+    
+    # custom predictor matrix for MICE-ours-pred
+    exclude_from_imp_model = c("A", "B")
+    
+    ### For association
+    # regression strings
+    form_string = "B ~ A"
+
+    # gold-standard model uses underlying variables
+    gold_form_string = "B1 ~ A1"
+
+    # coef and estimand of interest
+    coef_of_interest = "A"
+    #@GOT THIS EMPIRICALLY: simulated du with N = 50,000
+    #  a little tricky to get it theoretically because it's a spurious association
+    #  rather than a causal effect
+    #@will need to re-estimate this if any of above parameters change
+    beta = 0.33
+    
+    
+    # ### For just intercept of A
+    # # regression strings
+    # form_string = "A ~ 1"
+    # 
+    # # gold-standard model uses underlying variables
+    # gold_form_string = "A1 ~ 1"
+    # 
+    # # coef and estimand of interest: mean(A)
+    # coef_of_interest = "(Intercept)"
+    # beta = 0
+    
+    
+  }  # end of .p$dag_name == "1E"
+  
+  
+  
   # ~ Finish generating data ----------------
   cor(du)
   
@@ -317,7 +392,7 @@ fit_regression = function(form_string,
   
   #if ( miss_method %in% c("CC", "IPW") ) dat = dm
   if ( miss_method == "MI" ) dat = imps
-  if ( miss_method == "gold" ) dat = du
+  if ( miss_method %in% c("gold", "CC") ) dat = du
   
   # ~ CC and gold std  ---------------------
   if ( miss_method %in% c("CC", "gold") ) {
