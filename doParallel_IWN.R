@@ -122,14 +122,14 @@ if ( run.local == TRUE ) {
   # FOR RUNNING 1 SCEN
   scen.params = tidyr::expand_grid(
     
-    #rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    rep.methods = "gold ; MICE-std ; MICE-ours ; MICE-ours-pred",
+    rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+    #rep.methods = "gold ; MICE-std ; MICE-ours ; MICE-ours-pred",
     model = "OLS",
     
     imp_m = 50,
     imp_maxit = 100,
     
-    dag_name = c( "1B" ),
+    dag_name = c( "1D" ),
     N = c(4000) 
   )
   
@@ -224,7 +224,7 @@ for ( scen in scens_to_run ) {
       
       # parse methods string
       ( all.methods = unlist( strsplit( x = p$rep.methods,
-                                      split = " ; " ) ) )
+                                        split = " ; " ) ) )
       
       
       # ~ Simulate Dataset ------------------------------
@@ -238,6 +238,7 @@ for ( scen in scens_to_run ) {
       ( gold_form_string = as.character( sim_obj$gold_form_string ) )
       ( beta = as.numeric(sim_obj$beta) )
       ( coef_of_interest = as.character( sim_obj$coef_of_interest ) )
+      ( exclude_from_imp_model = as.character( sim_obj$exclude_from_imp_model ) )
       
       
       # coefficient of interest for gold-standard model
@@ -250,17 +251,18 @@ for ( scen in scens_to_run ) {
         coef_of_interest_gold = paste(coef_of_interest, "1", sep = "")
       }
       
-  
+      
       
       # ~ Make Imputed Data ------------------------------
       
       # details of how mice() implements pmm:
       # ?mice.impute.pmm
-      if ( "MICE-std" %in% all.methods ) {
+      if ( "MICE-std" %in% all.methods & !is.null(di_std) ) {
         
         imps_mice_std = mice( di_std,
                               maxit = p$imp_maxit,
-                              m = p$imp_m )
+                              m = p$imp_m,
+                              printFlag = FALSE )
         
         # sanity check
         imp1 = complete(imps_mice_std, 1)
@@ -271,12 +273,13 @@ for ( scen in scens_to_run ) {
       }
       
       # MICE by restricting dataset
-      if ( "MICE-ours" %in% all.methods ) {
+      if ( "MICE-ours" %in% all.methods & !is.null(di_ours) ) {
         
         imps_mice_ours = mice( di_ours,
                                maxit = p$imp_maxit,
-                               m = p$imp_m )
-   
+                               m = p$imp_m,
+                               printFlag = FALSE )
+        
         # sanity check
         imp1 = complete(imps_mice_ours, 1)
         
@@ -286,21 +289,18 @@ for ( scen in scens_to_run ) {
       }
       
       # MICE by adjusting predictor matrix
-      if ( "MICE-ours-pred" %in% all.methods ) {
+      if ( "MICE-ours-pred" %in% all.methods & !is.null(di_std) ) {
         
         # modify predictor matrix instead of restricting dataset
         ini = mice(di_std, maxit=0)
         pred = ini$predictorMatrix
-        # don't allow B1 in the imputation model
-        exclude_from_imp_model = "B1"
         pred[,exclude_from_imp_model] = 0
-        #@LATER need the DAG itself to pass exclude_from_imp_model
-        
         
         imps_mice_ours_pred = mice( di_std,
-                               predictorMatrix = pred,
-                               maxit = p$imp_maxit,
-                               m = p$imp_m )
+                                    predictorMatrix = pred,
+                                    maxit = p$imp_maxit,
+                                    m = p$imp_m,
+                                    printFlag = FALSE )
         
         # sanity check
         imp1 = complete(imps_mice_ours_pred, 1)
@@ -314,20 +314,26 @@ for ( scen in scens_to_run ) {
       
       
       
-      if ( "Am-std" %in% all.methods ) {
+      if ( "Am-std" %in% all.methods & !is.null(di_std) ) {
+        
         imps_am_std = amelia( as.data.frame(di_std),
-                              m=p$imp_m)
+                              m=p$imp_m,
+                              p2s = 0 # don't print output
+        )
         
         # check for problems
+        #@need to make this a tryCatch loop, as in run_method_safe
         if ( any(is.na((imps_am_std$imputations$imp1))) ) stop("MI left NAs in dataset - what a butt")
       } else {
         imps_am_std = NULL
       }
       
       
-      if ( "Am-ours" %in% all.methods ) {
+      if ( "Am-ours" %in% all.methods & !is.null(di_ours) ) {
         imps_am_ours = amelia( as.data.frame(di_ours),
-                               m=p$imp_m)
+                               m=p$imp_m,
+                               p2s = 0 # don't print output
+        )
         
         # check for problems
         if ( any(is.na((imps_am_ours$imputations$imp1))) ) stop("MI left NAs in dataset - what a butt")
@@ -335,7 +341,7 @@ for ( scen in scens_to_run ) {
         imps_am_ours = NULL
       }
       
-  
+      
       
       # ~ Initialize Global Vars ------------------------------
       
@@ -365,9 +371,8 @@ for ( scen in scens_to_run ) {
       
       if (run.local == TRUE) srr(rep.res)
       
-  
-      #bm: Will need to adjust imputation dataset for ours, because I think what you actually want is to exclude Y from imp model but not from dataset?
       
+
       # ~~ MICE-std ----
       if ( "MICE-std" %in% all.methods ) {
         rep.res = run_method_safe(method.label = c("MICE-std"),
@@ -385,7 +390,7 @@ for ( scen in scens_to_run ) {
       
       
       # ~~ MICE-ours ----
-      if ( "MICE-ours" %in% all.methods ) {
+      if ( "MICE-ours" %in% all.methods & !is.null(imps_mice_ours) ) {
         rep.res = run_method_safe(method.label = c("MICE-ours"),
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
@@ -402,7 +407,7 @@ for ( scen in scens_to_run ) {
       
       
       # ~~ MICE-ours-pred ----
-      if ( "MICE-ours-pred" %in% all.methods ) {
+      if ( "MICE-ours-pred" %in% all.methods & !is.null(imps_mice_ours_pred) ) {
         rep.res = run_method_safe(method.label = c("MICE-ours-pred"),
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
@@ -420,7 +425,7 @@ for ( scen in scens_to_run ) {
       
       
       # ~~ Am-std ----
-      if ( "Am-std" %in% all.methods ) {
+      if ( "Am-std" %in% all.methods & !is.null(imps_am_std) ) {
         rep.res = run_method_safe(method.label = c("Am-std"),
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
@@ -436,7 +441,7 @@ for ( scen in scens_to_run ) {
       
       
       # ~~ Am-ours ----
-      if ( "Am-ours" %in% all.methods ) {
+      if ( "Am-ours" %in% all.methods & !is.null(imps_am_ours) ) {
         rep.res = run_method_safe(method.label = c("Am-ours"),
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,

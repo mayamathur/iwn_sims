@@ -76,6 +76,9 @@ sim_data = function(.p) {
     # here, backdoor criterion holds conditional on nothing
     di_ours = du %>% select(A, Y, RA)
     
+    # custom predictor matrix for MICE-ours-pred
+    exclude_from_imp_model = NULL
+    
     # regression strings
     form_string = "Y ~ A"
     
@@ -119,6 +122,9 @@ sim_data = function(.p) {
     # and for our imputation
     # here, backdoor criterion holds conditional on nothing
     di_ours = du %>% select(C1, A)
+    
+    # custom predictor matrix for MICE-ours-pred
+    exclude_from_imp_model = NULL
     
     
     ### For just the intercept of A
@@ -175,6 +181,9 @@ sim_data = function(.p) {
     # Thm 2
     di_ours = du %>% select(C, A, RA)
     
+    # custom predictor matrix for MICE-ours-pred
+    exclude_from_imp_model = NULL
+    
     # regression strings
     form_string = "A ~ 1"
     
@@ -190,41 +199,50 @@ sim_data = function(.p) {
   
   
   # ~ DAG 1D -----------------------------
-  # 2 analysis variables, one of which is an RA-A collider
+  # similar to 1B, but now B is an analysis variable and 
+  #  has its own missingness, so restricting the dataset to exclude it from imputation doesn't work
   
   if ( .p$dag_name == "1D" ) {
+  
     du = data.frame( U1 = rnorm( n = .p$N ),
-                     U2 = rnorm( n = .p$N ) )  
+                     U2 = rnorm( n = .p$N ) )
     
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean(1*U1) ),
               
-              Y1 = rnorm( n = 1,
+              B1 = rnorm( n = 1,
                           mean(1*U1 + 1*U2) ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*U2),
                            size = 1 ),
+              RB = rbinom( n = 1,
+                           prob = 0.9,  # 10% missing
+                           size = 1 ),
+              #*interestingly, intercept of A less biased for standard MI methods when there is MORE missingness on B
+              #  I guess this is because it plays less role in imputation model?
               
               A = ifelse(RA == 0, NA, A1),
-              Y = Y1 )
+              B = ifelse(RB == 0, NA, B1) )
     
     
     
     # make dataset for imputation (standard way: all measured variables)
-    di_std = du %>% select(Y, A)
+    di_std = du %>% select(A, B)
     
     # and for our imputation
-    # here, backdoor criterion holds conditional on nothing
-    di_ours = du %>% select(A)
+    di_ours = NULL
+    
+    # custom predictor matrix for MICE-ours-pred
+    exclude_from_imp_model = "B"
     
     ### For association
     # # regression strings
-    # form_string = "Y ~ A"
+    # form_string = "B ~ A"
     # 
     # # gold-standard model uses underlying variables
-    # gold_form_string = "Y1 ~ A1"
+    # gold_form_string = "B1 ~ A1"
     # 
     # # coef and estimand of interest
     # coef_of_interest = "A"
@@ -242,7 +260,7 @@ sim_data = function(.p) {
     beta = 0
     
     
-  }  # end of .p$dag_name == "1C"
+  }  # end of .p$dag_name == "1D"
   
   
   
@@ -257,13 +275,24 @@ sim_data = function(.p) {
   # marginal prevalences
   colMeans(du, na.rm = TRUE)
   
-  return( llist(du,
-                di_std,
-                di_ours,
-                form_string,
-                gold_form_string,
-                coef_of_interest,
-                beta) )
+  # can't use llist here in case some list elements are NULL (e.g., di_ours)
+  # return( llist(du,
+  #               di_std,
+  #               di_ours,
+  #               exclude_from_imp_model,
+  #               form_string,
+  #               gold_form_string,
+  #               coef_of_interest,
+  #               beta) )
+  
+  return( list(du = du,
+                di_std = di_std,
+                di_ours = di_ours,
+                exclude_from_imp_model = exclude_from_imp_model,
+                form_string = form_string,
+                gold_form_string = gold_form_string,
+                coef_of_interest = coef_of_interest,
+                beta = beta) )
   
 }
 

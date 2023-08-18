@@ -34,13 +34,14 @@ lapply( allPackages,
 
 scen.params = tidyr::expand_grid(
   
-  rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; Am-ours",
+  rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+  #rep.methods = "gold ; MICE-std ; MICE-ours ; MICE-ours-pred",
   model = "OLS",
   
   imp_m = 50,
   imp_maxit = 100,
   
-  dag_name = c( "1C" ),
+  dag_name = c( "1D" ),
   N = c(4000) 
 )
 
@@ -66,7 +67,7 @@ write.csv( scen.params, "scen_params.csv", row.names = FALSE )
 source("helper_IWN.R")
 
 # number of sbatches to generate (i.e., iterations within each scenario)
-n.reps.per.scen = 1000
+n.reps.per.scen = 500
 n.reps.in.doParallel = 50
 ( n.files = ( n.reps.per.scen / n.reps.in.doParallel ) * n.scen )
 
@@ -107,7 +108,7 @@ n.files
 # xxx files
 path = "/home/groups/manishad/IWN"
 setwd( paste(path, "/sbatch_files", sep="") )
-for (i in 1:20) {
+for (i in 1:10) {
   system( paste("sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/", i, ".sbatch", sep="") )
 }
 
