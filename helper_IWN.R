@@ -208,15 +208,20 @@ sim_data = function(.p) {
                      U2 = rnorm( n = .p$N ),
                      C1 = rnorm( n = .p$N ) )
     
+    coef1 = 2
+    
+    #**IMPORTANT: when coef_of_interest = A,
+    # this DAG has beta (below) estimated empirically.
+    # if any parameters below change, you'll need to re-estimate it.
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
-                          mean(1*U1) ),
+                          mean(coef1*U1) ),
               
               B1 = rnorm( n = 1,
-                          mean(1*U1 + 1*U2) ),
+                          mean(coef1*U1 + coef1*U2) ),
               
               RA = rbinom( n = 1,
-                           prob = expit(1*U2),
+                           prob = expit(3*U2),
                            size = 1 ),
               RB = rbinom( n = 1,
                            prob = 0.9,  # 10% missing
@@ -225,15 +230,16 @@ sim_data = function(.p) {
               #  I guess this is because it plays less role in imputation model?
               
               A = ifelse(RA == 0, NA, A1),
-              B = ifelse(RB == 0, NA, B1) )
+              B = ifelse(RB == 0, NA, B1),
+              C = C1)
     
     
     
     # make dataset for imputation (standard way: all measured variables)
-    di_std = du %>% select(A, B, C1)
+    di_std = du %>% select(A, B, C)
     
     # and for our imputation
-    di_ours = du %>% select(A, C1)
+    di_ours = du %>% select(A, C)
     
     # custom predictor matrix for MICE-ours-pred
     exclude_from_imp_model = "B"
@@ -247,7 +253,12 @@ sim_data = function(.p) {
 
     # coef and estimand of interest
     coef_of_interest = "A"
-    beta = NA # wrong b/c they're spuriously associated
+    
+    #@GOT THIS EMPIRICALLY from gold-std model
+    #  a little tricky to get it theoretically because it's a spurious association
+    #  rather than a causal effect
+    #@will need to re-estimate this if any of above parameters change
+    beta = 0.803394
     
     # ### For just intercept of A
     # # regression strings
@@ -268,6 +279,7 @@ sim_data = function(.p) {
   # ~ DAG 1E -----------------------------
   # similar to 1D, but now there's another backdoor path and we want the A-B association
   
+  # NOT USEFUL?
   if ( .p$dag_name == "1E" ) {
     
     du = data.frame( U1 = rnorm( n = .p$N ),
@@ -337,6 +349,73 @@ sim_data = function(.p) {
     
     
   }  # end of .p$dag_name == "1E"
+  
+  
+  # ~ DAG 1F -----------------------------
+  # A1-B1 collider
+  
+  if ( .p$dag_name == "1F" ) {
+    du = data.frame( U1 = rnorm( n = .p$N ),
+                     U2 = rnorm( n = .p$N ),
+                     C1 = rnorm( n = .p$N ) ) 
+    
+    coef = 3
+    du = du %>% rowwise() %>%
+      mutate( A1 = rnorm( n = 1,
+                          mean(coef*U1) ),
+              
+              D1 = rnorm( n = 1,
+                          mean(coef*U1 + coef*U2) ),
+              
+              B1 = rnorm( n = 1,
+                          mean(coef*U2) ),
+              
+              RA = rbinom( n = 1,
+                           prob = 0.5,
+                           size = 1 ),
+              
+              A = ifelse(RA == 0, NA, A1),
+              B = B1,
+              C = C1,
+              D = D1)
+    
+    
+    
+    # make dataset for imputation (standard way: all measured variables)
+    di_std = du %>% select(B, C, D, A)
+    
+    # and for our imputation
+    # could actually be just (C1, A), or even just A
+    di_ours = du %>% select(B, C, A)
+    
+    # custom predictor matrix for MICE-ours-pred
+    exclude_from_imp_model = "D"
+    
+    
+    # ### For just the intercept of A
+    # # regression strings
+    # form_string = "A ~ 1"
+    # 
+    # # gold-standard model uses underlying variables
+    # gold_form_string = "A1 ~ 1"
+    # 
+    # # coef and estimand of interest: mean(A)
+    # coef_of_interest = "(Intercept)"
+    # beta = 0
+    
+    ## For the A-B association
+    # regression strings
+    form_string = "B ~ A"
+
+    # gold-standard model uses underlying variables
+    gold_form_string = "B1 ~ A1"
+
+    # coef and estimand of interest
+    coef_of_interest = "A"
+    beta = NA # wrong b/c they're spuriously associated
+    
+    
+  }  # end of .p$dag_name == "1F"
   
   
   

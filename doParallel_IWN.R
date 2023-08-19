@@ -123,13 +123,14 @@ if ( run.local == TRUE ) {
   scen.params = tidyr::expand_grid(
     
     rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    #rep.methods = "gold ; MICE-std ; MICE-ours ; MICE-ours-pred",
+    #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours-pred",
+    
     model = "OLS",
     
     imp_m = 50,
     imp_maxit = 100,
     
-    dag_name = c( "1E" ),
+    dag_name = c( "1D" ),
     N = c(4000) 
   )
   
@@ -240,6 +241,49 @@ for ( scen in scens_to_run ) {
       ( coef_of_interest = as.character( sim_obj$coef_of_interest ) )
       ( exclude_from_imp_model = as.character( sim_obj$exclude_from_imp_model ) )
       
+      # test only: fit the imputation model manually to foreshadow collider issues
+      #bm: think through this one some more... :)
+      # but first collect the stuff running on cluster and run more to fill in table
+      if (FALSE){
+        # DAG 1D
+        if ( p$dag_name == "1D" ) {
+          summary( lm(A1 ~ B1 + C1, data = du) )
+          lm(A ~ B + C, data = du)
+          
+          summary( lm(A ~ B + C, data = di_std) )
+          # as expected, the coef for B is wrong because of C
+          
+          # look at first mice imputation
+          imp1 = complete(imps_mice_std,1)
+          summary( lm(A ~ B + C, data = imp1) )  # still has spurious association
+          
+          
+          # analysis model
+          summary( lm(B ~ A, data = imp1) )
+          
+          # cf. truth
+          summary( lm(B1 ~ A1, data = du) )
+        }
+
+        # DAG 1F
+        if ( p$dag_name == "1F" ) {
+          summary( lm(A1~B1+D1, data = du) )
+          lm(A~B+D, data = du)
+          
+          summary( lm(A ~ B+C+D, data = di_std) )
+          # as expected, the coef for B is wrong because of D
+          
+          # look at first mice imputation
+          imp1 = complete(imps_mice_std,1)
+          summary( lm(A ~ B+C+D, data = imp1) )  # still has spurious association
+          
+          
+          # analysis model
+          summary( lm(B ~ A, data = imp1) )
+        }
+        
+      }
+      
       
       # coefficient of interest for gold-standard model
       if ( coef_of_interest == "(Intercept)" ){
@@ -249,6 +293,12 @@ for ( scen in scens_to_run ) {
         #  (e.g., A), so need to add "1" to use the variable
         # that's in gold-standard model
         coef_of_interest_gold = paste(coef_of_interest, "1", sep = "")
+
+      }
+      
+      # some methods don't make sense for certain combos of DAG and coef_of_interest
+      if ( p$dag_name == "1D" & coef_of_interest == "A" ) {
+        all.methods = all.methods[ !all.methods %in% c("MICE-ours", "Am-ours") ]
       }
       
       

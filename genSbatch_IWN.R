@@ -35,13 +35,12 @@ lapply( allPackages,
 scen.params = tidyr::expand_grid(
   
   rep.methods = "gold ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-  #rep.methods = "gold ; MICE-std ; MICE-ours ; MICE-ours-pred",
   model = "OLS",
   
   imp_m = 50,
   imp_maxit = 100,
   
-  dag_name = c( "1D" ),
+  dag_name = c( "1D" ), # change rep.method string if you change DAGs! 
   N = c(4000) 
 )
 
