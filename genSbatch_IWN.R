@@ -40,7 +40,7 @@ scen.params = tidyr::expand_grid(
   imp_m = 50,
   imp_maxit = 100,
   
-  dag_name = c( "1B" ), # change rep.method string if you change DAGs! 
+  dag_name = c( "1F" ), # change rep.method string if you change DAGs! 
   N = c(4000) 
 )
 

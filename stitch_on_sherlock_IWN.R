@@ -107,7 +107,7 @@ s = s %>% filter(!is.na(scen.name))
 
 # Quick Look ----------------------------------------------
 
-correct.order = c("gold", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
+correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
 s$method = factor(s$method, levels = correct.order)
 
 t = s %>% group_by(scen.name, method) %>%

@@ -245,15 +245,17 @@ for ( scen in scens_to_run ) {
           summary( lm(A1~B1+D1, data = du) )
           lm(A~B+D, data = du)
           
-          summary( lm(A ~ B+C+D, data = di_std) )
+          # mimic the imputation model
+          summary( lm(A~B+C+D, data = di_std) )
           # as expected, the coef for B is wrong because of D
           
           # look at first mice imputation
           imp1 = complete(imps_mice_std,1)
-          summary( lm(A ~ B+C+D, data = imp1) )  # still has spurious association
+          cor(imp1) # has CORRECT (0) association between A and B; unexpected
           
-          
-          # analysis model
+          # but analysis model is fine!
+          # maybe because it essentially marginalizes over D and the model for
+          #  A is collapsible?
           summary( lm(B ~ A, data = imp1) )
         }
         
