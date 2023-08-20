@@ -92,7 +92,7 @@ sim_data = function(.p) {
     
   }  # end of .p$dag_name == "1A"
   
-
+  
   # ~ DAG 1B -----------------------------
   # 1 analysis variable with RA-A collider
   
@@ -101,54 +101,64 @@ sim_data = function(.p) {
                      U2 = rnorm( n = .p$N ),
                      C1 = rnorm( n = .p$N ) )  # only including this because neither imputation method runs with 1 variable
     
+    coef1 = 2
+    
+    # *IMPORTANT: if you change coefs, need to re-estimate beta below
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
-                          mean(1*U1) ),
+                          mean(coef1*U1) ),
               
               B1 = rnorm( n = 1,
-                          mean(1*U1 + 1*U2) ),
+                          mean(coef1*U1 + coef1*U2) ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*U2),
                            size = 1 ),
               
-              A = ifelse(RA == 0, NA, A1) )
-    
+              A = ifelse(RA == 0, NA, A1),
+              B = B1,
+              C = C1)
     
     
     # make dataset for imputation (standard way: all measured variables)
-    di_std = du %>% select(B1, C1, A)
+    di_std = du %>% select(B, C, A)
     
     # and for our imputation
     # here, backdoor criterion holds conditional on nothing
-    di_ours = du %>% select(C1, A)
+    di_ours = du %>% select(C, A) #@this should be NULL if coef_of_interest = "A"
     
     # custom predictor matrix for MICE-ours-pred
+    # NULL because B is in target law, so can't use this approach
     exclude_from_imp_model = NULL
     
     
     ### For just the intercept of A
-    # regression strings
-    form_string = "A ~ 1"
+    if ( TRUE ){  # eventually this should be passed from scen.params
+      # regression strings
+      form_string = "A ~ 1"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "A1 ~ 1"
+      
+      # coef and estimand of interest: mean(A)
+      coef_of_interest = "(Intercept)"
+      beta = 0
+    }
     
-    # gold-standard model uses underlying variables
-    gold_form_string = "A1 ~ 1"
-    
-    # coef and estimand of interest: mean(A)
-    coef_of_interest = "(Intercept)"
-    beta = 0
     
     ### For the A-B association
-    # # regression strings
-    # form_string = "Y ~ B"
-    # 
-    # # gold-standard model uses underlying variables
-    # gold_form_string = "Y1 ~ B1"
-    # 
-    # # coef and estimand of interest
-    # coef_of_interest = "A"
-    # beta = NA # wrong b/c they're spuriously associated
-    
+    if ( FALSE ){  # eventually this should be passed from scen.params
+      
+      # regression strings
+      form_string = "B ~ A"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "B1 ~ A1"
+      
+      # coef and estimand of interest
+      coef_of_interest = "A"
+      beta = 0.80  # got this empirically
+    }
     
   }  # end of .p$dag_name == "1B"
   
@@ -203,7 +213,7 @@ sim_data = function(.p) {
   #  the dataset to exclude it from imputation doesn't work
   
   if ( .p$dag_name == "1D" ) {
-  
+    
     du = data.frame( U1 = rnorm( n = .p$N ),
                      U2 = rnorm( n = .p$N ),
                      C1 = rnorm( n = .p$N ) )
@@ -247,10 +257,10 @@ sim_data = function(.p) {
     ### For association
     # regression strings
     form_string = "B ~ A"
-
+    
     # gold-standard model uses underlying variables
     gold_form_string = "B1 ~ A1"
-
+    
     # coef and estimand of interest
     coef_of_interest = "A"
     
@@ -323,10 +333,10 @@ sim_data = function(.p) {
     ### For association
     # regression strings
     form_string = "B ~ A"
-
+    
     # gold-standard model uses underlying variables
     gold_form_string = "B1 ~ A1"
-
+    
     # coef and estimand of interest
     coef_of_interest = "A"
     #@GOT THIS EMPIRICALLY: simulated du with N = 50,000
@@ -352,7 +362,7 @@ sim_data = function(.p) {
   
   
   # ~ DAG 1F -----------------------------
-  # A1-B1 collider
+  # A1-B1 collider that is *not* in target law
   
   if ( .p$dag_name == "1F" ) {
     du = data.frame( U1 = rnorm( n = .p$N ),
@@ -385,7 +395,8 @@ sim_data = function(.p) {
     di_std = du %>% select(B, C, D, A)
     
     # and for our imputation
-    # could actually be just (C1, A), or even just A
+    # B included because it's a member of target law that is not 
+    #  on a backdoor path
     di_ours = du %>% select(B, C, A)
     
     # custom predictor matrix for MICE-ours-pred
@@ -406,10 +417,10 @@ sim_data = function(.p) {
     ## For the A-B association
     # regression strings
     form_string = "B ~ A"
-
+    
     # gold-standard model uses underlying variables
     gold_form_string = "B1 ~ A1"
-
+    
     # coef and estimand of interest
     coef_of_interest = "A"
     beta = NA # wrong b/c they're spuriously associated
@@ -441,13 +452,13 @@ sim_data = function(.p) {
   #               beta) )
   
   return( list(du = du,
-                di_std = di_std,
-                di_ours = di_ours,
-                exclude_from_imp_model = exclude_from_imp_model,
-                form_string = form_string,
-                gold_form_string = gold_form_string,
-                coef_of_interest = coef_of_interest,
-                beta = beta) )
+               di_std = di_std,
+               di_ours = di_ours,
+               exclude_from_imp_model = exclude_from_imp_model,
+               form_string = form_string,
+               gold_form_string = gold_form_string,
+               coef_of_interest = coef_of_interest,
+               beta = beta) )
   
 }
 
@@ -462,7 +473,7 @@ fit_regression = function(form_string,
                           miss_method,
                           du,
                           imps) {
-
+  
   
   # # test only
   # form_string = CC_adj_form_string
@@ -503,7 +514,7 @@ fit_regression = function(form_string,
   # ~ MI  ---------------------
   if ( miss_method == "MI" ) {
     
-
+    
     if ( model == "OLS" ) {
       #if ( nuni( complete(imps,1)$Y) <= 2 ) stop("You have a binary outcome but are fitting OLS with model-based SEs; need to allow robust SEs")
       
@@ -594,7 +605,7 @@ run_method_safe = function( method.label,
 # coefName: which coefficient to report
 # ols: the OLS model from lm()
 my_ols_hc0 = function( coefName, ols ){
-
+  
   ( bhat.ols = coef(ols)[coefName] )
   
   # heteroskedasticity-consistent robust SEs:

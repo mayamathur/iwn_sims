@@ -130,35 +130,10 @@ if ( run.local == TRUE ) {
     imp_m = 50,
     imp_maxit = 100,
     
-    dag_name = c( "1D" ),
+    dag_name = c( "1F" ),
     N = c(4000) 
   )
-  
-  # # FULL SET
-  # scen.params = tidyr::expand_grid(
-  #   
-  #   # methods to run for each simulation rep
-  #   rep.methods = "gold-std ; CC-adj ; CC-unadj ; MI-adj ; MI-unadj",
-  #   model = "OLS",
-  #   
-  #   # DAGs: Y_to_R_1, Y_to_R_2, comm_cause_1, comm_cause_2, comm_cause_3, mediation_1
-  #   dag_name = c( "Y_to_R_1", "Y_to_R_2",
-  #                 "comm_cause_1", "comm_cause_2", "comm_cause_3",
-  #                 "mediation_1" ),
-  #   N = c(100, 500, 5000, 10000),
-  #   # true OLS coefficient of A on Y
-  #   betaAY = c(1),
-  #   # OLS coeff of C on Y or vice versa
-  #   betaCY = c(1),
-  #   # OLS coef of A on C, if applicable
-  #   betaAC = c(1),
-  #   # logistic regression coef of C on R
-  #   betaCR = c(1),
-  #   
-  #   # which var(s) should be missing?
-  #   # options: "c('A', 'Y', 'C'), c('A'), c('Y')"
-  #   missing_vars = c( "c('A', 'Y')", "c('Y')",  "c('A')" )  # quotation marks must be single inside double
-  # )
+
   
   start.at = 1  # scen name to start at
   scen.params$scen = start.at:( nrow(scen.params) + start.at - 1 )
@@ -297,15 +272,17 @@ for ( scen in scens_to_run ) {
       }
       
       # some methods don't make sense for certain combos of DAG and coef_of_interest
-      if ( p$dag_name == "1D" & coef_of_interest == "A" ) {
+      #@this happens when a variable needed for imputation model is also in the target law
+      #  later could deal with this by adding the variable back into dataset after imputation
+      if ( (p$dag_name == "1D" & coef_of_interest == "A") |
+           (p$dag_name == "1B" & coef_of_interest == "A") ) {
         all.methods = all.methods[ !all.methods %in% c("MICE-ours", "Am-ours") ]
       }
-      
-      
+
       
       # ~ Make Imputed Data ------------------------------
       
-      #bm: need to put each of these in tryCatch loop
+      #@need to put each of these in tryCatch loop
       
       # ~~ MICE-std ----
       # details of how mice() implements pmm:
