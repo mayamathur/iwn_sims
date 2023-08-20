@@ -40,7 +40,7 @@ scen.params = tidyr::expand_grid(
   imp_m = 50,
   imp_maxit = 100,
   
-  dag_name = c( "1F" ), # change rep.method string if you change DAGs! 
+  dag_name = c( "1E" ), # change rep.method string if you change DAGs! 
   N = c(4000) 
 )
 
@@ -102,6 +102,8 @@ generateSbatch(sbatch_params, runfile_path)
 n.files
 
 # run just the first one
+
+
 # sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/1.sbatch
 
 # xxx files

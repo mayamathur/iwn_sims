@@ -288,7 +288,6 @@ sim_data = function(.p) {
   # ~ DAG 1E -----------------------------
   # CC insufficiency: Type D
   
-  # NOT USEFUL?
   if ( .p$dag_name == "1E" ) {
     
     du = data.frame( A1 = rnorm( n = .p$N ) )
@@ -340,6 +339,68 @@ sim_data = function(.p) {
     
   }  # end of .p$dag_name == "1E"
   
+  # ~ DAG 1G -----------------------------
+  # like 1E, but now also has an evil collider path
+  
+  if ( .p$dag_name == "1G" ) {
+    
+    du = data.frame( U1 = rnorm( n = .p$N ),
+                     U2 = rnorm( n = .p$N ) )
+    
+    coef1 = 2
+    
+    #**IMPORTANT: this DAG has beta (below) estimated empirically.
+    # if any parameters below change, you'll need to re-estimate it.
+    du = du %>% rowwise() %>%
+      mutate( A1 = rnorm( n = 1,
+                          mean = coef1*U1 ),
+              
+              D1 = rnorm( n = 1,
+                          mean = coef1*U1 + coef1*U2 ),
+              
+              B1 = rnorm( n = 1,
+                          mean = coef1*A1 ),
+              
+              C1 = rnorm( n = 1,
+                          mean = coef1*B1 ),
+              
+              RA = rbinom( n = 1,
+                           prob = expit(1*C1 + 1*U2),
+                           size = 1 ),
+              RB = rbinom( n = 1,
+                           prob = 0.5,
+                           size = 1 ),
+              
+              A = ifelse(RA == 0, NA, A1),
+              B = ifelse(RB == 0, NA, B1),
+              C = C1,
+              D = D1)
+    
+    
+    
+    # make dataset for imputation (standard way: all measured variables)
+    di_std = du %>% select(A, B, C, D)
+    
+    # and for our imputation
+    # same as standard methods, so omitted
+    di_ours = NULL
+    
+    # custom predictor matrix for MICE-ours-pred
+    exclude_from_imp_model = "D"
+    
+    ### For association
+    # regression strings
+    form_string = "B ~ A"
+    
+    # gold-standard model uses underlying variables
+    gold_form_string = "B1 ~ A1"
+    
+    # coef and estimand of interest
+    coef_of_interest = "A"
+    beta = coef1
+    
+  }  # end of .p$dag_name == "1G"
+  
   
   # ~ DAG 1F -----------------------------
   # A1-B1 collider that is *not* in target law
@@ -351,8 +412,16 @@ sim_data = function(.p) {
     
     coef = 3
     du = du %>% rowwise() %>%
-      mutate( A1 = rnorm( n = 1,
-                          mean(coef*U1) ),
+      mutate( 
+        
+              # SAVE - continuous A
+              # A1 = rnorm( n = 1,
+              #             mean(coef*U1) ),
+              
+              # binary A
+              A1 = rbinom( n = 1,
+                           prob = expit(1*U1),
+                           size = 1 ),
               
               D1 = rnorm( n = 1,
                           mean(coef*U1 + coef*U2) ),

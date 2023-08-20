@@ -130,7 +130,7 @@ if ( run.local == TRUE ) {
     imp_m = 50,
     imp_maxit = 100,
     
-    dag_name = c( "1F" ),
+    dag_name = c( "1E" ),
     N = c(4000) 
   )
 
@@ -216,52 +216,7 @@ for ( scen in scens_to_run ) {
       ( coef_of_interest = as.character( sim_obj$coef_of_interest ) )
       ( exclude_from_imp_model = as.character( sim_obj$exclude_from_imp_model ) )
       
-      # test only: fit the imputation model manually to foreshadow collider issues
-      #bm: think through this one some more... :)
-      # but first collect the stuff running on cluster and run more to fill in table
-      if (FALSE){
-        # DAG 1D
-        if ( p$dag_name == "1D" ) {
-          summary( lm(A1 ~ B1 + C1, data = du) )
-          lm(A ~ B + C, data = du)
-          
-          summary( lm(A ~ B + C, data = di_std) )
-          # as expected, the coef for B is wrong because of C
-          
-          # look at first mice imputation
-          imp1 = complete(imps_mice_std,1)
-          summary( lm(A ~ B + C, data = imp1) )  # still has spurious association
-          
-          
-          # analysis model
-          summary( lm(B ~ A, data = imp1) )
-          
-          # cf. truth
-          summary( lm(B1 ~ A1, data = du) )
-        }
-
-        # DAG 1F
-        if ( p$dag_name == "1F" ) {
-          summary( lm(A1~B1+D1, data = du) )
-          lm(A~B+D, data = du)
-          
-          # mimic the imputation model
-          summary( lm(A~B+C+D, data = di_std) )
-          # as expected, the coef for B is wrong because of D
-          
-          # look at first mice imputation
-          imp1 = complete(imps_mice_std,1)
-          cor(imp1) # has CORRECT (0) association between A and B; unexpected
-          
-          # but analysis model is fine!
-          # maybe because it essentially marginalizes over D and the model for
-          #  A is collapsible?
-          summary( lm(B ~ A, data = imp1) )
-        }
-        
-      }
-      
-      
+  
       # coefficient of interest for gold-standard model
       if ( coef_of_interest == "(Intercept)" ){
         coef_of_interest_gold = "(Intercept)"
@@ -306,6 +261,54 @@ for ( scen in scens_to_run ) {
  
       } else {
         imps_mice_std = NULL
+      }
+      
+      
+      
+      
+      # test only: fit the imputation model manually to foreshadow collider issues
+      #bm: think through this one some more... :)
+      # but first collect the stuff running on cluster and run more to fill in table
+      if (FALSE){
+        # DAG 1D
+        if ( p$dag_name == "1D" ) {
+          summary( lm(A1 ~ B1 + C1, data = du) )
+          lm(A ~ B + C, data = du)
+          
+          summary( lm(A ~ B + C, data = di_std) )
+          # as expected, the coef for B is wrong because of C
+          
+          # look at first mice imputation
+          imp1 = complete(imps_mice_std,1)
+          summary( lm(A ~ B + C, data = imp1) )  # still has spurious association
+          
+          
+          # analysis model
+          summary( lm(B ~ A, data = imp1) )
+          
+          # cf. truth
+          summary( lm(B1 ~ A1, data = du) )
+        }
+        
+        # DAG 1F
+        if ( p$dag_name == "1F" ) {
+          summary( lm(A1~B1+D1, data = du) )
+          lm(A~B+D, data = du)
+          
+          # mimic the imputation model
+          summary( lm(A~B+C+D, data = di_std) )
+          # as expected, the coef for B is wrong because of D
+          
+          # look at first mice imputation
+          imp1 = complete(imps_mice_std,1)
+          cor(imp1) # has CORRECT (0) association between A and B; unexpected
+          
+          # but analysis model is fine!
+          # **maybe because it essentially marginalizes over D and the model for
+          #  A is collapsible?
+          summary( lm(B ~ A, data = imp1) )
+        }
+        
       }
       
       # ~~ MICE-ours ----
