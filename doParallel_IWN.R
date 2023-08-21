@@ -194,7 +194,7 @@ for ( scen in scens_to_run ) {
       }
       
       p = scen.params[ scen.params$scen == scen, names(scen.params) != "scen"]
-      
+      coef_of_interest = p$coef_of_interest
       
       # show beginning of dataset
       if ( i == 1 & verbose == TRUE) cat("\n\nDIM AND HEAD OF P (SINGLE ROW OF SCEN.PARAMS):\n")
