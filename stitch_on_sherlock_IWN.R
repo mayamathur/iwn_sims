@@ -103,7 +103,7 @@ if ( any(is.na(names(s))) ) {
 
 s = s %>% filter(!is.na(scen.name))
 
-
+table(s$dag_name)
 
 # Quick Look ----------------------------------------------
 
