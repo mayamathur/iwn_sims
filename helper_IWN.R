@@ -326,8 +326,7 @@ sim_data = function(.p) {
   
   
   # ~ Finish generating data ----------------
-  cor(du)
-  
+
   # info about dataset
   # empirical P(R=1)
   #@specific to this DAG

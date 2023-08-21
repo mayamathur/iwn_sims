@@ -44,7 +44,9 @@ scen.params = tidyr::expand_grid(
   N = c(4000) 
 )
 
-
+# remove combos that aren't implemented
+scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H") &
+                                          coef_of_interest == "(Intercept)") )
 # add scen numbers
 start.at = 1
 scen.params = scen.params %>% add_column( scen = start.at : ( nrow(scen.params) + (start.at - 1) ),

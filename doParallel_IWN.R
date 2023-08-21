@@ -12,6 +12,7 @@ rm( list = ls() )
 
 # are we running locally?
 run.local = FALSE
+#  run.local = TRUE
 
 # should we set scen params interactively on cluster?
 # *if you accidently set this to TRUE and run via sbatches on cluster,
@@ -122,24 +123,26 @@ if ( run.local == TRUE ) {
   # FOR RUNNING 1 SCEN
   scen.params = tidyr::expand_grid(
     
-    #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    rep.methods = "gold ; CC ; MICE-ours ; Am-ours", #@@@CHANGE FOR FUTURE DAGS!!!
+    rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+    #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours", 
     
     model = "OLS",
-    coef_of_interest = "A",  # "(Intercept)" or "A"
+    coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
     
-    imp_m = 50,
-    imp_maxit = 100,
+    imp_m = 5,
+    imp_maxit = 5,
     
-    dag_name = c( "1G" ),
-    N = c(4000) 
+    dag_name = c( "1B", "1D", "1G", "1H" ),
+    N = c(100) 
   )
-
+  # remove combos that aren't implemented
+  scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H") &
+                                            coef_of_interest == "(Intercept)") )
   
   start.at = 1  # scen name to start at
   scen.params$scen = start.at:( nrow(scen.params) + start.at - 1 )
   
-  sim.reps = 3  # reps to run in this iterate
+  sim.reps = 1  # reps to run in this iterate
   
   # set the number of local cores
   registerDoParallel(cores=8)
@@ -336,7 +339,7 @@ for ( scen in scens_to_run ) {
       # ~~ MICE-ours-pred ----
       # MICE by adjusting predictor matrix
       if ( "MICE-ours-pred" %in% all.methods & !is.null(di_std) ) {
-        
+
         # modify predictor matrix instead of restricting dataset
         ini = mice(di_std, maxit=0)
         pred = ini$predictorMatrix
@@ -348,6 +351,11 @@ for ( scen in scens_to_run ) {
                                     m = p$imp_m,
                                     printFlag = FALSE )
         
+        # for later sanity checks
+        actual_pred = imps_mice_ours_pred$predictorMatrix
+        sums = colSums(actual_pred)  # if >0, means var was used in imp model
+        mice_ours_pred_vars_included = names( sums[ sums > 0 ] )
+
         # sanity check
         imp1 = complete(imps_mice_ours_pred, 1)
         
@@ -556,7 +564,6 @@ for ( scen in scens_to_run ) {
       
       rep.res$form_string = form_string
       rep.res$gold_form_string = gold_form_string
-      rep.res$pR_emp = du$dat_pR[1]
       
       # add more info
       rep.res = rep.res %>% add_column( rep.name = i, .before = 1 )
@@ -568,6 +575,19 @@ for ( scen in scens_to_run ) {
       cat("\ndoParallel flag: Before adding sanity checks to rep.res")
       # could add info about simulated datasets here
       # preface them with "sancheck." to facilitate looking at sanchecks alone
+      
+      if ( !is.null(di_std) ) {
+        rep.res = rep.res %>% add_column( sancheck.di_std.vars = paste( names(di_std), collapse = " " ) )
+      }
+      
+      if ( !is.null(di_ours) ) {
+        rep.res = rep.res %>% add_column( sancheck.di_ours.vars = paste( names(di_ours), collapse = " " ) )
+      }
+      
+
+      if ( !is.null(mice_ours_pred_vars_included) ) {
+        rep.res = rep.res %>% add_column( sancheck.mice_ours_pred_vars_included = paste( mice_ours_pred_vars_included, collapse = " " ) )
+      }
       
       cat("\n\n")
       print(rep.res)
