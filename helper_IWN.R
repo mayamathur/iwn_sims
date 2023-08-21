@@ -80,17 +80,10 @@ sim_data = function(.p) {
     
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(B, C, A)
-    
-    # and for our imputation
-    # here, backdoor criterion holds conditional on nothing
-    di_ours = du %>% select(C, A) #@this should be NULL if coef_of_interest = "A"
-    
-    # custom predictor matrix for MICE-ours-pred
-    exclude_from_imp_model = "B" #@ for coef_of_interest = intercept; otherwise should be NULL because B is in target law in that case
-    
-    
+  
+  
     ### For just the intercept of A
-    if ( TRUE ){  # eventually this should be passed from scen.params
+    if ( .p$coef_of_interest == "(Intercept)" ){ 
       # regression strings
       form_string = "A ~ 1"
       
@@ -100,11 +93,16 @@ sim_data = function(.p) {
       # coef and estimand of interest: mean(A)
       coef_of_interest = "(Intercept)"
       beta = 0
+      
+      di_ours = du %>% select(C, A) 
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = "B"
     }
     
     
     ### For the A-B association
-    if ( FALSE ){  # eventually this should be passed from scen.params
+    if ( .p$coef_of_interest == "A" ){ 
       
       # regression strings
       form_string = "B ~ A"
@@ -115,6 +113,11 @@ sim_data = function(.p) {
       # coef and estimand of interest
       coef_of_interest = "A"
       beta = 0.80  # got this empirically
+      
+      di_ours = NULL  # m-backdoor violated
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = NULL # B is in target law
     }
     
   }  # end of .p$dag_name == "1B"
