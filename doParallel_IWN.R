@@ -126,6 +126,7 @@ if ( run.local == TRUE ) {
     rep.methods = "gold ; CC ; MICE-ours ; Am-ours", #@@@CHANGE FOR FUTURE DAGS!!!
     
     model = "OLS",
+    coef_of_interest = "A",  # "(Intercept)" or "A"
     
     imp_m = 50,
     imp_maxit = 100,
@@ -213,7 +214,6 @@ for ( scen in scens_to_run ) {
       ( form_string = as.character( sim_obj$form_string ) )
       ( gold_form_string = as.character( sim_obj$gold_form_string ) )
       ( beta = as.numeric(sim_obj$beta) )
-      ( coef_of_interest = as.character( sim_obj$coef_of_interest ) )
       ( exclude_from_imp_model = as.character( sim_obj$exclude_from_imp_model ) )
       
   
