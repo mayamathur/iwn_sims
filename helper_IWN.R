@@ -209,8 +209,9 @@ sim_data = function(.p) {
     
     du = data.frame( U1 = rnorm( n = .p$N ),
                      U2 = rnorm( n = .p$N ) )
-    
-    coef1 = 2
+
+    #coef1 = 2 # as in 2023-08-21 sims, where MICE unexpected performed badly
+    coef1 = 1
     
     #**IMPORTANT: this DAG has beta (below) estimated empirically.
     # if any parameters below change, you'll need to re-estimate it.
@@ -225,7 +226,7 @@ sim_data = function(.p) {
                           mean = coef1*A1 ),
               
               C1 = rnorm( n = 1,
-                          mean = coef1*B1 ),
+                          mean = (coef1/2)*B1 ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*C1 + 1*U2),
@@ -240,6 +241,7 @@ sim_data = function(.p) {
               D = D1)
     
     
+    #cor(du %>% select(A,B,C,D))
     
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(A, B, C, D)
@@ -275,7 +277,8 @@ sim_data = function(.p) {
     
     du = data.frame( A1 = rnorm( n = .p$N ) )
     
-    coef1 = 2
+    coef1 = 1
+    #coef1 = 2  # as in 2023-08-21 sims, where MICE unexpected performed badly
     
     #**IMPORTANT: this DAG has beta (below) estimated empirically.
     # if any parameters below change, you'll need to re-estimate it.
@@ -294,7 +297,8 @@ sim_data = function(.p) {
               A = A1,
               B = ifelse(RB == 0, NA, B1),
               C = C1)
-    
+  
+    #cor(du %>% select(A1, B1, C1))
     
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(A, B, C)
