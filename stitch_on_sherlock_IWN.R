@@ -111,13 +111,15 @@ correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "M
 s$method = factor(s$method, levels = correct.order)
 
 t = s %>% group_by(scen.name, method) %>%
-  summarise( reps = n(),
+  summarise( 
+             reps = n(),
              Bhat = meanNA(bhat),
              BhatBias = meanNA(bhat - beta),
              BhatLo = meanNA(bhat_lo),
              BhatHi = meanNA(bhat_hi),
              BhatRMSE = sqrt( meanNA( (bhat - beta)^2 ) ),
-             BhatCover = meanNA(bhat_covers)) %>%
+             BhatCover = meanNA(bhat_covers),
+             dag = dag_name[1] ) %>%
   arrange() %>%
   mutate_if(is.numeric, function(x) round(x,2)) 
 

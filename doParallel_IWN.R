@@ -122,15 +122,15 @@ if ( run.local == TRUE ) {
   # FOR RUNNING 1 SCEN
   scen.params = tidyr::expand_grid(
     
-    rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours-pred",
+    #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+    rep.methods = "gold ; CC ; MICE-ours ; Am-ours", #@@@CHANGE FOR FUTURE DAGS!!!
     
     model = "OLS",
     
     imp_m = 50,
     imp_maxit = 100,
     
-    dag_name = c( "1E" ),
+    dag_name = c( "1G" ),
     N = c(4000) 
   )
 

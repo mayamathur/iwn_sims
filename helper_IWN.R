@@ -51,7 +51,7 @@ sim_data = function(.p) {
   
   if (.p$model != "OLS" ) stop("Only handles model OLS for now")
   
-  
+ 
   # ~ DAG 1A -----------------------------
   if ( .p$dag_name == "1A" ) {
     du = data.frame( A1 = rnorm( n = .p$N ) )
@@ -288,6 +288,7 @@ sim_data = function(.p) {
   # ~ DAG 1E -----------------------------
   # CC insufficiency: Type D
   
+  # NOT IN USE
   if ( .p$dag_name == "1E" ) {
     
     du = data.frame( A1 = rnorm( n = .p$N ) )
@@ -368,7 +369,7 @@ sim_data = function(.p) {
                            prob = expit(1*C1 + 1*U2),
                            size = 1 ),
               RB = rbinom( n = 1,
-                           prob = 0.5,
+                           prob = 1, # NOT MISSING to avoid unblockable m-bd path
                            size = 1 ),
               
               A = ifelse(RA == 0, NA, A1),
@@ -382,8 +383,7 @@ sim_data = function(.p) {
     di_std = du %>% select(A, B, C, D)
     
     # and for our imputation
-    # same as standard methods, so omitted
-    di_ours = NULL
+    di_ours = du %>% select(A, B, C)
     
     # custom predictor matrix for MICE-ours-pred
     exclude_from_imp_model = "D"
@@ -402,68 +402,44 @@ sim_data = function(.p) {
   }  # end of .p$dag_name == "1G"
   
   
-  # ~ DAG 1F -----------------------------
-  # A1-B1 collider that is *not* in target law
+  # ~ DAG 1H -----------------------------
+  # Type-M
   
-  if ( .p$dag_name == "1F" ) {
-    du = data.frame( U1 = rnorm( n = .p$N ),
-                     U2 = rnorm( n = .p$N ),
-                     C1 = rnorm( n = .p$N ) ) 
+  if ( .p$dag_name == "1H" ) {
     
-    coef = 3
+    du = data.frame( A1 = rnorm( n = .p$N ) )
+    
+    coef1 = 2
+    
+    #**IMPORTANT: this DAG has beta (below) estimated empirically.
+    # if any parameters below change, you'll need to re-estimate it.
     du = du %>% rowwise() %>%
-      mutate( 
-        
-              # SAVE - continuous A
-              # A1 = rnorm( n = 1,
-              #             mean(coef*U1) ),
-              
-              # binary A
-              A1 = rbinom( n = 1,
-                           prob = expit(1*U1),
-                           size = 1 ),
-              
-              D1 = rnorm( n = 1,
-                          mean(coef*U1 + coef*U2) ),
+      mutate( C1 = rnorm( n = 1,
+                          mean = coef1*A1 ),
               
               B1 = rnorm( n = 1,
-                          mean(coef*U2) ),
+                          # coef1 is the direct effect of A1
+                          mean = coef1*C1 + coef1*A1 ),
               
-              RA = rbinom( n = 1,
-                           prob = 0.5,
+              RB = rbinom( n = 1,
+                           prob = expit(1*C1), 
                            size = 1 ),
               
-              A = ifelse(RA == 0, NA, A1),
-              B = B1,
-              C = C1,
-              D = D1)
+              A = A1,
+              B = ifelse(RB == 0, NA, B1),
+              C = C1)
     
-    
-    
+
     # make dataset for imputation (standard way: all measured variables)
-    di_std = du %>% select(B, C, D, A)
+    di_std = du %>% select(A, B, C)
     
     # and for our imputation
-    # B included because it's a member of target law that is not 
-    #  on a backdoor path
-    di_ours = du %>% select(B, C, A)
+    di_ours = NULL
     
     # custom predictor matrix for MICE-ours-pred
-    exclude_from_imp_model = "D"
+    exclude_from_imp_model = NULL
     
-    
-    # ### For just the intercept of A
-    # # regression strings
-    # form_string = "A ~ 1"
-    # 
-    # # gold-standard model uses underlying variables
-    # gold_form_string = "A1 ~ 1"
-    # 
-    # # coef and estimand of interest: mean(A)
-    # coef_of_interest = "(Intercept)"
-    # beta = 0
-    
-    ## For the A-B association
+    ### For association
     # regression strings
     form_string = "B ~ A"
     
@@ -472,13 +448,11 @@ sim_data = function(.p) {
     
     # coef and estimand of interest
     coef_of_interest = "A"
-    beta = 0
+    beta = coef1^2 + coef1  # mediation total effect
     
-    
-  }  # end of .p$dag_name == "1F"
+  }  # end of .p$dag_name == "1H"
   
-  
-  
+
   # ~ Finish generating data ----------------
   cor(du)
   
