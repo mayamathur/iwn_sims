@@ -260,6 +260,7 @@ for ( scen in scens_to_run ) {
         imps_mice_std = mice( di_std,
                               maxit = p$imp_maxit,
                               m = p$imp_m,
+                              method = "norm", #@TEMP ONLY
                               printFlag = FALSE )
         
         # sanity check
@@ -342,6 +343,7 @@ for ( scen in scens_to_run ) {
         imps_mice_ours = mice( di_ours,
                                maxit = p$imp_maxit,
                                m = p$imp_m,
+                               method = "norm", #@TEMP ONLY
                                printFlag = FALSE )
         
         # sanity check
@@ -370,6 +372,7 @@ for ( scen in scens_to_run ) {
                                     predictorMatrix = pred,
                                     maxit = p$imp_maxit,
                                     m = p$imp_m,
+                                    method = "norm", #@TEMP ONLY
                                     printFlag = FALSE )
         
         # for later sanity checks
