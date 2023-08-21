@@ -80,8 +80,8 @@ sim_data = function(.p) {
     
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(B, C, A)
-  
-  
+    
+    
     ### For just the intercept of A
     if ( .p$coef_of_interest == "(Intercept)" ){ 
       # regression strings
@@ -121,51 +121,6 @@ sim_data = function(.p) {
     }
     
   }  # end of .p$dag_name == "1B"
-  
-  
-  
-  # ~ DAG 1C -----------------------------
-  # 1 analysis variable with RA-A backdoor path via unmeasured variable
-  
-  if ( .p$dag_name == "1C" ) {
-    du = data.frame( U1 = rnorm( n = .p$N ),
-                     C1 = rnorm( n = .p$N ) )  # only including this because neither imputation method runs with 1 variable
-    
-    du = du %>% rowwise() %>%
-      mutate( A1 = rnorm( n = 1,
-                          mean = 1*U1 ),
-              
-              RA = rbinom( n = 1,
-                           prob = expit(1*U1),
-                           size = 1 ),
-              
-              A = ifelse(RA == 0, NA, A1),
-              C = C1)
-    
-    
-    
-    # make dataset for imputation (standard way: all measured variables)
-    di_std = du %>% select(C, A)
-    
-    # and for our imputation
-    # Thm 2
-    di_ours = du %>% select(C, A, RA)
-    
-    # custom predictor matrix for MICE-ours-pred
-    exclude_from_imp_model = NULL
-    
-    # regression strings
-    form_string = "A ~ 1"
-    
-    # gold-standard model uses underlying variables
-    gold_form_string = "A1 ~ 1"
-    
-    # coef and estimand of interest: mean(A)
-    coef_of_interest = "(Intercept)"
-    beta = 0
-    
-    
-  }  # end of .p$dag_name == "1C"
   
   
   # ~ DAG 1D -----------------------------
@@ -208,39 +163,51 @@ sim_data = function(.p) {
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(A, B, C)
     
-    # and for our imputation
-    di_ours = du %>% select(A, C)
     
-    # custom predictor matrix for MICE-ours-pred
-    exclude_from_imp_model = "B"
+    ### For just the intercept of A
+    if ( .p$coef_of_interest == "(Intercept)" ){ 
+      
+      # regression strings
+      form_string = "A ~ 1"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "A1 ~ 1"
+      
+      # coef and estimand of interest: mean(A)
+      coef_of_interest = "(Intercept)"
+      beta = 0
+      
+      # and for our imputation
+      di_ours = du %>% select(A, C)
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = "B"
+    }
     
-    ### For association
-    # regression strings
-    form_string = "B ~ A"
-    
-    # gold-standard model uses underlying variables
-    gold_form_string = "B1 ~ A1"
-    
-    # coef and estimand of interest
-    coef_of_interest = "A"
-    
-    #@GOT THIS EMPIRICALLY from gold-std model
-    #  a little tricky to get it theoretically because it's a spurious association
-    #  rather than a causal effect
-    #@will need to re-estimate this if any of above parameters change
-    beta = 0.803394
-    
-    # ### For just intercept of A
-    # # regression strings
-    # form_string = "A ~ 1"
-    # 
-    # # gold-standard model uses underlying variables
-    # gold_form_string = "A1 ~ 1"
-    # 
-    # # coef and estimand of interest: mean(A)
-    # coef_of_interest = "(Intercept)"
-    # beta = 0
-    
+    ### For the A-B association
+    if ( .p$coef_of_interest == "A" ){ 
+      
+      # regression strings
+      form_string = "B ~ A"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "B1 ~ A1"
+      
+      # coef and estimand of interest
+      coef_of_interest = "A"
+      
+      #@GOT THIS EMPIRICALLY from gold-std model
+      #  a little tricky to get it theoretically because it's a spurious association
+      #  rather than a causal effect
+      #@will need to re-estimate this if any of above parameters change
+      beta = 0.80
+      
+      # and for our imputation
+      di_ours = NULL
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = NULL
+    }
     
   }  # end of .p$dag_name == "1D"
   
@@ -271,7 +238,7 @@ sim_data = function(.p) {
               RB = rbinom( n = 1,
                            prob = 0.5,
                            size = 1 ),
-
+              
               A = ifelse(RA == 0, NA, A1),
               B = ifelse(RB == 0, NA, B1),
               C = C1)
@@ -390,7 +357,7 @@ sim_data = function(.p) {
               B = ifelse(RB == 0, NA, B1),
               C = C1)
     
-
+    
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(A, B, C)
     
@@ -413,7 +380,7 @@ sim_data = function(.p) {
     
   }  # end of .p$dag_name == "1H"
   
-
+  
   # ~ Finish generating data ----------------
   cor(du)
   
