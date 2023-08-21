@@ -58,7 +58,7 @@ sim_data = function(.p) {
     
     du = du %>% rowwise() %>%
       mutate( Y1 = rnorm( n = 1,
-                          mean(1*A1) ),
+                          mean = 1*A1 ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*Y1),
@@ -106,10 +106,10 @@ sim_data = function(.p) {
     # *IMPORTANT: if you change coefs, need to re-estimate beta below
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
-                          mean(coef1*U1) ),
+                          mean = coef1*U1 ),
               
               B1 = rnorm( n = 1,
-                          mean(coef1*U1 + coef1*U2) ),
+                          mean = coef1*U1 + coef1*U2 ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*U2),
@@ -172,7 +172,7 @@ sim_data = function(.p) {
     
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
-                          mean(1*U1) ),
+                          mean = 1*U1 ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*U1),
@@ -224,10 +224,10 @@ sim_data = function(.p) {
     # if any parameters below change, you'll need to re-estimate it.
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
-                          mean(coef1*U1) ),
+                          mean = coef1*U1 ),
               
               B1 = rnorm( n = 1,
-                          mean(coef1*U1 + coef1*U2) ),
+                          mean = coef1*U1 + coef1*U2 ),
               
               RA = rbinom( n = 1,
                            prob = expit(3*U2),
@@ -299,10 +299,10 @@ sim_data = function(.p) {
     # if any parameters below change, you'll need to re-estimate it.
     du = du %>% rowwise() %>%
       mutate( B1 = rnorm( n = 1,
-                          mean(coef1*A1) ),
+                          mean = coef1*A1 ),
               
               C1 = rnorm( n = 1,
-                          mean(coef1*B1) ),
+                          mean = coef1*B1 ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*C1),
