@@ -32,20 +32,37 @@ lapply( allPackages,
 
 # SET SIMULATION PARAMETERS -----------------------------------------
 
+# ISOLATE SCENS
 scen.params = tidyr::expand_grid(
   
   rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
   #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours", 
   
   model = "OLS",
-  coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+  coef_of_interest = c( "A"),  # "(Intercept)" or "A"
   
   imp_m = 50,
   imp_maxit = 200,
   
-  dag_name = c( "1B", "1D", "1G", "1H" ),
+  dag_name = c( "1G", "1H" ),
   N = c(1000) 
 )
+
+# # FULL SIMS
+# scen.params = tidyr::expand_grid(
+#   
+#   rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+#   #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours", 
+#   
+#   model = "OLS",
+#   coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+#   
+#   imp_m = 50,
+#   imp_maxit = 200,
+#   
+#   dag_name = c( "1B", "1D", "1G", "1H" ),
+#   N = c(1000) 
+# )
 
 # remove combos that aren't implemented
 scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H") &
@@ -112,7 +129,7 @@ n.files
 # xxx files
 path = "/home/groups/manishad/IWN"
 setwd( paste(path, "/sbatch_files", sep="") )
-for (i in 1:60) {
+for (i in 1:20) {
   system( paste("sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/", i, ".sbatch", sep="") )
 }
 

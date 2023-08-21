@@ -78,6 +78,8 @@ sim_data = function(.p) {
               C = C1)
     
     
+    # cor(du %>% select(A1, B1, C1))
+    
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(B, C, A)
     
@@ -155,6 +157,7 @@ sim_data = function(.p) {
               C = C1)
     
     
+    # cor(du %>% select(A1, B1, C1))
     
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(A, B, C)
@@ -213,8 +216,6 @@ sim_data = function(.p) {
     #coef1 = 2 # as in 2023-08-21 sims, where MICE unexpected performed badly
     coef1 = 1
     
-    #**IMPORTANT: this DAG has beta (below) estimated empirically.
-    # if any parameters below change, you'll need to re-estimate it.
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean = coef1*U1 ),
@@ -240,7 +241,7 @@ sim_data = function(.p) {
               C = C1,
               D = D1)
     
-    
+  
     #cor(du %>% select(A,B,C,D))
     
     # make dataset for imputation (standard way: all measured variables)
