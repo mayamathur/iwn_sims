@@ -119,8 +119,7 @@ if ( run.local == TRUE ) {
   
   
   # ~~ ********** Set Sim Params: Local Run -----------------------------
-  
-  # FOR RUNNING 1 SCEN
+
   scen.params = tidyr::expand_grid(
     
     rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
