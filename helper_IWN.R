@@ -326,11 +326,6 @@ sim_data = function(.p) {
   
   
   # ~ Finish generating data ----------------
-
-  # info about dataset
-  # empirical P(R=1)
-  #@specific to this DAG
-  du$dat_pR = mean(du$RA == 1)
   
   # marginal prevalences
   colMeans(du, na.rm = TRUE)

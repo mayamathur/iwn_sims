@@ -88,6 +88,8 @@ if (run.local == FALSE ) {
   print(p)
   
   
+  
+  # ~~*********** Set cluster sim reps ----------------
   # simulation reps to run within this job
   # **this need to match n.reps.in.doParallel in the genSbatch script
   sim.reps = 50
@@ -122,17 +124,25 @@ if ( run.local == TRUE ) {
 
   scen.params = tidyr::expand_grid(
     
-    rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours", 
+    #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+    rep.methods = "MICE-std", 
     
     model = "OLS",
-    coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+    #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+    coef_of_interest = "A",
     
-    imp_m = 5,
-    imp_maxit = 5,
+    # as on cluster
+    imp_m = 50,
+    imp_maxit = 100,
+    N = c(1000),
     
-    dag_name = c( "1B", "1D", "1G", "1H" ),
-    N = c(100) 
+    # # for quicker sims
+    # imp_m = 5,
+    # imp_maxit = 5,
+    # N = c(100),
+    
+    #dag_name = c( "1B", "1D", "1G", "1H" ),
+    dag_name = "1H"
   )
   # remove combos that aren't implemented
   scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H") &
@@ -241,8 +251,7 @@ for ( scen in scens_to_run ) {
       
       # ~ Make Imputed Data ------------------------------
       
-      #@need to put each of these in tryCatch loop
-      
+    
       # ~~ MICE-std ----
       # details of how mice() implements pmm:
       # ?mice.impute.pmm
@@ -260,10 +269,23 @@ for ( scen in scens_to_run ) {
           message("MI left NAs in dataset - what a butt")
           imps_mice_std = NULL
         }
+        
+        
+        #bm - save this code for the correlation matrices!
+        # # TEMP
+        # cors = lapply( X = 1:p$imp_m,
+        #                FUN = function(.m) cor(complete(imps_mice_std, .m) ) )
+        # 
+        # # **compare to underlying data
+        # cor(du %>% select(A1,B1,C1))
+        # ( mean_cor_imps = Reduce("+", cors) / length(cors) )
  
       } else {
         imps_mice_std = NULL
       }
+      
+      
+
       
       
       
@@ -575,8 +597,11 @@ for ( scen in scens_to_run ) {
       # could add info about simulated datasets here
       # preface them with "sancheck." to facilitate looking at sanchecks alone
       
+      
+      # amount of missing data
+      # using di_std to avoid having R indicators, etc., in the dataset
       if ( !is.null(di_std) ) {
-        rep.res = rep.res %>% add_column( sancheck.di_std.vars = paste( names(di_std), collapse = " " ) )
+        rep.res = rep.res %>% add_column( sancheck.prop_complete = sum( complete.cases(di_std) ) / nrow(di_std) )
       }
       
       if ( !is.null(di_ours) ) {

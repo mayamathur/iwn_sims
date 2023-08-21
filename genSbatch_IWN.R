@@ -41,7 +41,7 @@ scen.params = tidyr::expand_grid(
   coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
   
   imp_m = 50,
-  imp_maxit = 100,
+  imp_maxit = 200,
   
   dag_name = c( "1B", "1D", "1G", "1H" ),
   N = c(1000) 

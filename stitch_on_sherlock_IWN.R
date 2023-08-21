@@ -107,10 +107,13 @@ s = s %>% filter(!is.na(scen.name))
 
 # Quick Look ----------------------------------------------
 
+# sanity check
+table(s$dag_name, s$coef_of_interest)
+
 correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
 s$method = factor(s$method, levels = correct.order)
 
-t = s %>% group_by(scen.name, method) %>%
+t = s %>% group_by(dag_name, coef_of_interest, method) %>%
   summarise( 
              reps = n(),
              Bhat = meanNA(bhat),
@@ -118,8 +121,7 @@ t = s %>% group_by(scen.name, method) %>%
              BhatLo = meanNA(bhat_lo),
              BhatHi = meanNA(bhat_hi),
              BhatRMSE = sqrt( meanNA( (bhat - beta)^2 ) ),
-             BhatCover = meanNA(bhat_covers),
-             dag = dag_name[1] ) %>%
+             BhatCover = meanNA(bhat_covers) ) %>%
   arrange() %>%
   mutate_if(is.numeric, function(x) round(x,2)) 
 
