@@ -61,14 +61,14 @@ sim_data = function(.p) {
     
     coef1 = 2
     
-    # *IMPORTANT: if you change coefs, need to re-estimate beta below
+    # standard version - SAVE
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean = coef1*U1 ),
               
               B1 = rnorm( n = 1,
-                          mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
-                          #mean = coef1*U1 + coef1*U2 ),
+                          #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
+                          mean = coef1*U1 + coef1*U2 ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*U2),
@@ -79,7 +79,26 @@ sim_data = function(.p) {
               C = C1)
     
     
+    # 2023-08-22 experiments - stronger correlations
+    du = du %>% rowwise() %>%
+      mutate( A1 = rnorm( n = 1,
+                          mean = coef1*U1 ),
+              
+              B1 = rnorm( n = 1,
+                          #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
+                          mean = 3*U1 + 3*U2 ),
+              
+              RA = rbinom( n = 1,
+                           prob = expit(3*U2),
+                           size = 1 ),
+              
+              A = ifelse(RA == 0, NA, A1),
+              B = B1,
+              C = C1)
+    
+    
     # cor(du %>% select(A1, B1, C1))
+    #cor(du$RA, du$B1)
     
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(B, C, A)
