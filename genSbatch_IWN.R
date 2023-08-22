@@ -43,6 +43,7 @@ scen.params = tidyr::expand_grid(
   
   imp_m = 50,
   imp_maxit = 200,
+  mice_method = "norm",
   
   dag_name = c( "1G", "1H" ),
   N = c(1000) 

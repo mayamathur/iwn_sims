@@ -130,12 +130,14 @@ if ( run.local == TRUE ) {
     model = "OLS",
     #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
     coef_of_interest = "A",
-    
-    # as on cluster
-    imp_m = 50,
-    imp_maxit = 100,
     N = c(1000),
     
+    # MICE parameters
+    # as on cluster
+    imp_m = 50,  # also for Amelia
+    imp_maxit = 100,
+    mice_method = "norm",
+
     # # for quicker sims
     # imp_m = 5,
     # imp_maxit = 5,
@@ -260,7 +262,7 @@ for ( scen in scens_to_run ) {
         imps_mice_std = mice( di_std,
                               maxit = p$imp_maxit,
                               m = p$imp_m,
-                              method = "norm", #@TEMP ONLY
+                              method = p$mice_method,
                               printFlag = FALSE )
         
         # sanity check
@@ -271,16 +273,6 @@ for ( scen in scens_to_run ) {
           imps_mice_std = NULL
         }
         
-        
-        #bm - save this code for the correlation matrices!
-        # # TEMP
-        # cors = lapply( X = 1:p$imp_m,
-        #                FUN = function(.m) cor(complete(imps_mice_std, .m) ) )
-        # 
-        # # **compare to underlying data
-        # cor(du %>% select(A1,B1,C1))
-        # ( mean_cor_imps = Reduce("+", cors) / length(cors) )
- 
       } else {
         imps_mice_std = NULL
       }
@@ -343,7 +335,7 @@ for ( scen in scens_to_run ) {
         imps_mice_ours = mice( di_ours,
                                maxit = p$imp_maxit,
                                m = p$imp_m,
-                               method = "norm", #@TEMP ONLY
+                               method = p$mice_method,
                                printFlag = FALSE )
         
         # sanity check
@@ -372,7 +364,7 @@ for ( scen in scens_to_run ) {
                                     predictorMatrix = pred,
                                     maxit = p$imp_maxit,
                                     m = p$imp_m,
-                                    method = "norm", #@TEMP ONLY
+                                    method = p$mice_method,
                                     printFlag = FALSE )
         
         # for later sanity checks
