@@ -114,38 +114,49 @@ correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "M
 s$method = factor(s$method, levels = correct.order)
 
 # fill in beta (where it's NA) using gold-standard
-s = data.frame( scen = c(1,1,1,1,2,2,2,2),
-                beta = c( rep(NA,4), rep(1,4)),
-                method = rep( c("gold", "gold", "other", "other"), 2),
-                bhat = rep( c(2,3,0,1), 2 ) )  # test
+# s = data.frame( scen.name = c(1,1,1,1,2,2,2,2),
+#                 beta = c( rep(NA,4), rep(1,4)),
+#                 method = rep( c("gold", "gold", "other", "other"), 2),
+#                 bhat = rep( c(2,3,0,1), 2 ) )  # test
 
-( beta_emp = s %>% filter(method == "gold") %>%
-  group_by(scen) %>%
-  summarise(beta = meanNA(bhat)) )
+beta_emp = s %>% filter(method == "gold") %>%
+  group_by(scen.name) %>%
+  summarise(beta = meanNA(bhat)) 
+as.data.frame(beta_emp)
 
 s2 = s
 
-s2 %>% rowwise() %>%
+s2 = s2 %>% rowwise() %>%
   mutate( beta = ifelse( !is.na(beta),
                          beta,
-                         beta_emp$beta[ beta_emp$scen == scen ] ) )
+                         beta_emp$beta[ beta_emp$scen.name == scen.name ] ) )
+
+# sanity check
+as.data.frame( s2 %>% group_by(dag_name, coef_of_interest) %>%
+                summarise(beta[1]) )
 # end of filling in beta
 
 
-# @LATER CHANGE TO s2
-t = s %>% group_by(dag_name, coef_of_interest, method) %>%
+t = s2 %>% group_by(dag_name, coef_of_interest, method) %>%
   summarise( 
-             reps = n(),
-             Bhat = meanNA(bhat),
-             BhatBias = meanNA(bhat - beta),
-             BhatLo = meanNA(bhat_lo),
-             BhatHi = meanNA(bhat_hi),
-             BhatRMSE = sqrt( meanNA( (bhat - beta)^2 ) ),
-             BhatCover = meanNA(bhat_covers) ) %>%
+    reps = n(),
+    Bhat = meanNA(bhat),
+    BhatBias = meanNA(bhat - beta),
+    BhatLo = meanNA(bhat_lo),
+    BhatHi = meanNA(bhat_hi),
+    BhatRMSE = sqrt( meanNA( (bhat - beta)^2 ) ),
+    BhatCover = meanNA( covers(truth = beta,
+                               lo = bhat_lo,
+                               hi = bhat_hi) ) ) %>%
   arrange() %>%
   mutate_if(is.numeric, function(x) round(x,2)) 
 
+
+
+
 as.data.frame(t)
+
+#as.data.frame( t %>% filter(dag_name == "1F") %>% select(method, Bhat, BhatBias, BhatCover) )
 
 path = "/home/groups/manishad/IWN/overall_stitched"
 setwd(path)

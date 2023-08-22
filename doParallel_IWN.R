@@ -574,10 +574,6 @@ for ( scen in scens_to_run ) {
       rep.res$coef_of_interest = coef_of_interest
       rep.res$beta = beta
       
-      rep.res$bhat_covers = covers(truth = beta,
-                                   rep.res$bhat_lo,
-                                   rep.res$bhat_hi)
-      
       rep.res$form_string = form_string
       rep.res$gold_form_string = gold_form_string
       
