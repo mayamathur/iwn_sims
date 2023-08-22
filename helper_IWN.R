@@ -67,7 +67,8 @@ sim_data = function(.p) {
                           mean = coef1*U1 ),
               
               B1 = rnorm( n = 1,
-                          mean = coef1*U1 + coef1*U2 ),
+                          mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
+                          #mean = coef1*U1 + coef1*U2 ),
               
               RA = rbinom( n = 1,
                            prob = expit(1*U2),

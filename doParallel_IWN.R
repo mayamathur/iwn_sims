@@ -147,7 +147,7 @@ if ( run.local == TRUE ) {
     dag_name = "1H"
   )
   # remove combos that aren't implemented
-  scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H") &
+  scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H", "1F") &
                                             coef_of_interest == "(Intercept)") )
   
   start.at = 1  # scen name to start at

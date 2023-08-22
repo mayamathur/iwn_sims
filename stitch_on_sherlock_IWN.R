@@ -113,6 +113,26 @@ table(s$dag_name, s$coef_of_interest)
 correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
 s$method = factor(s$method, levels = correct.order)
 
+# fill in beta (where it's NA) using gold-standard
+s = data.frame( scen = c(1,1,1,1,2,2,2,2),
+                beta = c( rep(NA,4), rep(1,4)),
+                method = rep( c("gold", "gold", "other", "other"), 2),
+                bhat = rep( c(2,3,0,1), 2 ) )  # test
+
+( beta_emp = s %>% filter(method == "gold") %>%
+  group_by(scen) %>%
+  summarise(beta = meanNA(bhat)) )
+
+s2 = s
+
+s2 %>% rowwise() %>%
+  mutate( beta = ifelse( !is.na(beta),
+                         beta,
+                         beta_emp$beta[ beta_emp$scen == scen ] ) )
+# end of filling in beta
+
+
+# @LATER CHANGE TO s2
 t = s %>% group_by(dag_name, coef_of_interest, method) %>%
   summarise( 
              reps = n(),
