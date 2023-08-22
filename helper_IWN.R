@@ -111,7 +111,7 @@ sim_data = function(.p) {
       # gold-standard model uses underlying variables
       gold_form_string = "B1 ~ A1"
 
-      beta = 0.80  # got this empirically
+      beta = NA
       
       di_ours = NULL  # m-backdoor violated
       
@@ -191,11 +191,7 @@ sim_data = function(.p) {
       # gold-standard model uses underlying variables
       gold_form_string = "B1 ~ A1"
 
-      #@GOT THIS EMPIRICALLY from gold-std model
-      #  a little tricky to get it theoretically because it's a spurious association
-      #  rather than a causal effect
-      #@will need to re-estimate this if any of above parameters change
-      beta = 0.80
+      beta = NA
       
       # and for our imputation
       di_ours = NULL
