@@ -70,10 +70,10 @@ y_axis_vars = c("A1","B1","U1","U2")
 
 lp = l %>% filter(variable %in% y_axis_vars)
 
-# proportion missing by variable
+#### Proportion missing by variable
 colMeans(is.na(du))
 
-# boxplots of each counterfactual variable by missingness status
+#### Boxplots of each counterfactual variable by missingness status
 p = ggplot( data = lp,
             aes(x = variable,
                 y = value,
@@ -91,11 +91,17 @@ p
 # 
 
 
+#### A1-B1 relationship within missingness status
 
-
-
-
-
+p = ggplot( data = du,
+            aes(x = A1,
+                y = B1,
+                color = as.factor(RA) ) ) +
+  geom_point(alpha = 0.3) + 
+  geom_smooth(method = "lm", fill = NA)+
+  theme_bw()
+p
+# for other structures, could stratify by collider here
 
 
 
