@@ -8,45 +8,6 @@ logit = function(p) p / (1-p)
 
 # DATA-GENERATION FNS ---------------------
 
-# # TEST ONLY
-# if ( FALSE ) {
-#   p = tidyr::expand_grid(
-#     
-#     # methods to run for each simulation rep
-#     rep.methods = "gold-std ; CC-adj ; CC-unadj ; MI-adj ; MI-unadj",
-#     model = "OLS",
-#     
-#     # DAGs: hughes_1c, mediation_1, mediation_2d, R_to_Y_1, R_to_Y_2, R_to_Y_4, Y_to_R_1, Y_to_R_2, comm_cause_1, comm_cause_2
-#     # Y_to_R_1 is same as Daniel's 4c
-#     dag_name = c("mediation_1"),
-#     N = 10^4,
-#     # true OLS coefficient of A on Y
-#     betaAY = c(1),
-#     # OLS coeff of C on Y or vice versa
-#     betaCY = c(1),
-#     # OLS coef of A on C, if applicable
-#     betaAC = c(1),
-#     # logistic regression coef of C on R
-#     betaCR = c(1),
-#     
-#     # which var(s) should be missing?
-#     # options: "c('A', 'Y', 'C'), c('A'), c('Y')"
-#     #missing_vars = "c('A', 'Y')"  # quotation marks must be single inside double
-#     missing_vars = "c('Y')"  # quotation marks must be single inside double
-#     #missing_vars = "c('A', 'Y')"  # quotation marks must be single inside double
-#     
-#   )
-#   
-#   p$scen = 1:nrow(p)
-#   .p = p
-#   
-#   sim_obj = sim_data(.p = .p)
-#   dm = sim_obj$dm
-#   du = sim_obj$du
-#   
-#   cor(du)
-# }
-
 sim_data = function(.p) {
   
   if (.p$model != "OLS" ) stop("Only handles model OLS for now")
@@ -61,22 +22,22 @@ sim_data = function(.p) {
     
     coef1 = 2
     
-    # standard version - SAVE
-    du = du %>% rowwise() %>%
-      mutate( A1 = rnorm( n = 1,
-                          mean = coef1*U1 ),
-              
-              B1 = rnorm( n = 1,
-                          #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
-                          mean = coef1*U1 + coef1*U2 ),
-              
-              RA = rbinom( n = 1,
-                           prob = expit(1*U2),
-                           size = 1 ),
-              
-              A = ifelse(RA == 0, NA, A1),
-              B = B1,
-              C = C1)
+    # # standard version - SAVE
+    # du = du %>% rowwise() %>%
+    #   mutate( A1 = rnorm( n = 1,
+    #                       mean = coef1*U1 ),
+    #           
+    #           B1 = rnorm( n = 1,
+    #                       #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
+    #                       mean = coef1*U1 + coef1*U2 ),
+    #           
+    #           RA = rbinom( n = 1,
+    #                        prob = expit(1*U2),
+    #                        size = 1 ),
+    #           
+    #           A = ifelse(RA == 0, NA, A1),
+    #           B = B1,
+    #           C = C1)
     
     
     # 2023-08-22 experiments - stronger correlations
