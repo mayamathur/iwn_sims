@@ -44,15 +44,15 @@ sim_data = function(.p) {
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean = coef1*U1 ),
-
+              
               B1 = rnorm( n = 1,
                           #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
                           mean = 3*U1 + 3*U2 ),
-
+              
               RA = rbinom( n = 1,
                            prob = expit(3*U2),
                            size = 1 ),
-
+              
               A = ifelse(RA == 0, NA, A1),
               B = B1,
               C = C1)
@@ -108,7 +108,7 @@ sim_data = function(.p) {
       
       # gold-standard model uses underlying variables
       gold_form_string = "B1 ~ A1"
-
+      
       beta = NA
       
       di_ours = NULL  # m-backdoor violated
@@ -132,9 +132,6 @@ sim_data = function(.p) {
     
     coef1 = 2
     
-    #**IMPORTANT: when coef_of_interest = A,
-    # this DAG has beta (below) estimated empirically.
-    # if any parameters below change, you'll need to re-estimate it.
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean = coef1*U1 ),
@@ -188,7 +185,7 @@ sim_data = function(.p) {
       
       # gold-standard model uses underlying variables
       gold_form_string = "B1 ~ A1"
-
+      
       beta = NA
       
       # and for our imputation
@@ -210,25 +207,25 @@ sim_data = function(.p) {
   if ( .p$dag_name == "1I" ) {
     
     du = data.frame( A1 = rnorm( n = .p$N ),
-                     B1 = rnorm( n = .p$N ),
                      C1 = rnorm( n = .p$N ) )
     
     coef1 = 2
-    
-    #**IMPORTANT: when coef_of_interest = A,
-    # this DAG has beta (below) estimated empirically.
-    # if any parameters below change, you'll need to re-estimate it.
+
     du = du %>% rowwise() %>%
-      mutate( RA = rbinom( n = 1,
-                           prob = expit(3*B1),
-                           size = 1 ),
-              RB = rbinom( n = 1,
-                           prob = 0.9,  # 10% missing
-                           size = 1 ),
-              
-              A = ifelse(RA == 0, NA, A1),
-              B = ifelse(RB == 0, NA, B1),
-              C = C1)
+      mutate( 
+        B1 = rnorm( n = 1,
+                    mean = coef1*A1 ),
+        
+        RA = rbinom( n = 1,
+                     prob = expit(3*B1),
+                     size = 1 ),
+        RB = rbinom( n = 1,
+                     prob = 0.5,  # this is 1-proportion missing
+                     size = 1 ),
+        
+        A = ifelse(RA == 0, NA, A1),
+        B = ifelse(RB == 0, NA, B1),
+        C = C1)
     
     
     # cor(du %>% select(A1, B1, C1))
@@ -264,7 +261,7 @@ sim_data = function(.p) {
       # gold-standard model uses underlying variables
       gold_form_string = "B1 ~ A1"
       
-      beta = NA
+      beta = coef1
       
       # and for our imputation
       di_ours = NULL
@@ -286,30 +283,30 @@ sim_data = function(.p) {
     
     du = data.frame( U1 = rnorm( n = .p$N ),
                      U2 = rnorm( n = .p$N ) )
-
+    
     #coef1 = 2 # as in 2023-08-21 sims, where MICE unexpected performed badly
     coef1 = 1
     
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean = coef1*U1 ),
-
+              
               D1 = rnorm( n = 1,
                           mean = coef1*U1 + coef1*U2 ),
-
+              
               B1 = rnorm( n = 1,
                           mean = coef1*A1 ),
-
+              
               C1 = rnorm( n = 1,
                           mean = (coef1/2)*B1 ),
-
+              
               RA = rbinom( n = 1,
                            prob = expit(1*C1 + 1*U2), #@2023-08-23 - these coefs result in low correlations between RA and C1, U2
                            size = 1 ),
               RB = rbinom( n = 1,
                            prob = 1, # NOT MISSING to avoid unblockable m-bd path
                            size = 1 ),
-
+              
               A = ifelse(RA == 0, NA, A1),
               B = ifelse(RB == 0, NA, B1),
               C = C1,
@@ -332,7 +329,7 @@ sim_data = function(.p) {
       
       # gold-standard model uses underlying variables
       gold_form_string = "B1 ~ A1"
-
+      
       beta = coef1
       
       # and for our imputation
@@ -513,8 +510,6 @@ sim_data = function(.p) {
     coef1 = 1
     #coef1 = 2  # as in 2023-08-21 sims, where MICE unexpected performed badly
     
-    #**IMPORTANT: this DAG has beta (below) estimated empirically.
-    # if any parameters below change, you'll need to re-estimate it.
     du = du %>% rowwise() %>%
       mutate( C1 = rnorm( n = 1,
                           mean = coef1*A1 ),
@@ -530,7 +525,7 @@ sim_data = function(.p) {
               A = A1,
               B = ifelse(RB == 0, NA, B1),
               C = C1)
-  
+    
     #cor(du %>% select(A1, B1, C1))
     
     # make dataset for imputation (standard way: all measured variables)

@@ -128,13 +128,13 @@ if ( run.local == TRUE ) {
     #rep.methods = "MICE-std", 
     
     model = "OLS",
-    #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
-    coef_of_interest = "A",
+    coef_of_interest = "(Intercept)",  # "(Intercept)" or "A"
+    #coef_of_interest = "A",
     N = c(1000),
     
     # MICE parameters
     # as on cluster
-    imp_m = 5,  # SET LOW
+    imp_m = 5,  # CURRENTLY SET LOW
     imp_maxit = 100,
     mice_method = "norm",
     
@@ -144,7 +144,7 @@ if ( run.local == TRUE ) {
     # N = c(100),
     
     #dag_name = c( "1B", "1D", "1G", "1H" ),
-    dag_name = "1Gb"
+    dag_name = "1I"
   )
   
   
@@ -657,12 +657,42 @@ for ( scen in scens_to_run ) {
 if ( run.local == TRUE ) {
   dim(rs_all_scens)
   
-  rs_all_scens %>% group_by(method) %>%
-    summarise( mean(bhat) )
+  
+  # fill in true beta
+  beta_emp = rs_all_scens %>% filter(method == "gold") %>%
+    group_by(scen.name) %>%
+    summarise(beta = meanNA(bhat)) 
+  as.data.frame(beta_emp)
+  
+  rs_all_scens = rs_all_scens %>% rowwise() %>%
+    mutate( beta = ifelse( !is.na(beta),
+                           beta,
+                           beta_emp$beta[ beta_emp$scen.name == scen.name ] ) )
+  
+  
+  
+  t = rs_all_scens %>% group_by(method) %>%
+    summarise( 
+      reps = n(),
+      Bhat = meanNA(bhat),
+      BhatBias = meanNA(bhat - beta),
+      BhatLo = meanNA(bhat_lo),
+      BhatHi = meanNA(bhat_hi),
+      BhatRMSE = sqrt( meanNA( (bhat - beta)^2 ) ),
+      BhatCover = meanNA( covers(truth = beta,
+                                 lo = bhat_lo,
+                                 hi = bhat_hi) ) ) %>%
+    arrange() %>%
+    mutate_if(is.numeric, function(x) round(x,2)) 
+  
+  as.data.frame(t)
+  
+  
+  
   
   setwd(data.dir)
   fwrite( rs_all_scens,
-          paste( "stitched.csv", sep = "" ) )
+          paste( "stitched_local.csv", sep = "" ) )
 }
 
 

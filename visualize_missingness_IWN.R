@@ -63,7 +63,7 @@ di_ours = sim_obj$di_ours
 l = reshape2::melt(du, id.vars = "RA", measure.vars = names(du)[ names(du) != "RA"] )
 
 
-# temp only
+# temp only: complete cases
 p = ggplot( data = du,
             aes(x = A1,
                 y = B1,
