@@ -46,8 +46,8 @@ p = tidyr::expand_grid(
   imp_maxit = NA,
   mice_method = NA,
   
-  dag_name = c( "1B" ),
-  N = c(50000)
+  dag_name = c( "1I" ),
+  N = c(5000)
 )
 
 
@@ -63,49 +63,90 @@ di_ours = sim_obj$di_ours
 l = reshape2::melt(du, id.vars = "RA", measure.vars = names(du)[ names(du) != "RA"] )
 
 
-# ~ Missingness patterns ------------------------------
-
-y_axis_vars = c("A1")
-y_axis_vars = c("A1","B1","U1","U2")
-
-lp = l %>% filter(variable %in% y_axis_vars)
-
-#### Proportion missing by variable
-colMeans(is.na(du))
-
-#### Boxplots of each counterfactual variable by missingness status
-p = ggplot( data = lp,
-            aes(x = variable,
-                y = value,
-                fill = as.factor(RA)
-                ) ) +
-  #geom_violin() +
-  geom_boxplot()+
-  theme_bw()
-
-p
-
-# # ggmice: https://amices.org/ggmice/
-# ggmice( data = du,
-#        aes(A, B) ) + geom_point()
-# 
-
-
-#### A1-B1 relationship within missingness status
-
+# temp only
 p = ggplot( data = du,
             aes(x = A1,
                 y = B1,
-                color = as.factor(RA) ) ) +
+                color = as.factor(RA == 1 & RB == 1) ) ) +
   geom_point(alpha = 0.3) + 
   geom_smooth(method = "lm", fill = NA)+
   theme_bw()
 p
-# for other structures, could stratify by collider here
+
+#### Correlation of counterfactuals
+cor( du %>% select(A1, B1, U1, U2, U3, C1, D1, RA))
+cor( du %>% select(A1, B1, C1, RA, RB))
+
+
+# ~ Missingness patterns ------------------------------
+
+#### Proportion missing by variable
+colMeans(is.na(du))
 
 
 
+# ~~ DAG 1B  -------------------------------------------------
+if (p$dag_name == "1B") {
+  y_axis_vars = c("A1")
+  y_axis_vars = c("A1","B1","U1","U2")
+  
+  lp = l %>% filter(variable %in% y_axis_vars)
+  
+  #### Boxplots of each counterfactual variable by missingness status
+  p = ggplot( data = lp,
+              aes(x = variable,
+                  y = value,
+                  fill = as.factor(RA)
+              ) ) +
+    #geom_violin() +
+    geom_boxplot()+
+    theme_bw()
+  p
+  
+  #### A1-B1 relationship within missingness status
+  # if parallel lines => CC unbiased
+  p = ggplot( data = du,
+              aes(x = A1,
+                  y = B1,
+                  color = as.factor(RA) ) ) +
+    geom_point(alpha = 0.3) + 
+    geom_smooth(method = "lm", fill = NA)+
+    theme_bw()
+  p
+}
 
+
+# ~~ DAG 1G  -------------------------------------------------
+
+if (p$dag_name == "1G") {
+  
+  y_axis_vars = c("A1")
+  y_axis_vars = c("A1","B1","U1","U2")
+  
+  lp = l %>% filter(variable %in% y_axis_vars)
+  
+  #### Boxplots of each counterfactual variable by missingness status
+  p = ggplot( data = lp,
+              aes(x = variable,
+                  y = value,
+                  fill = as.factor(RA)
+              ) ) +
+    #geom_violin() +
+    geom_boxplot()+
+    theme_bw()
+  p
+  
+  #### A1-B1 relationship within missingness status
+  # if parallel lines => CC unbiased
+  p = ggplot( data = du,
+              aes(x = A1,
+                  y = B1,
+                  color = as.factor(RA) ) ) +
+    geom_point(alpha = 0.3) + 
+    geom_smooth(method = "lm", fill = NA)+
+    theme_bw()
+  p
+}
 
 
 

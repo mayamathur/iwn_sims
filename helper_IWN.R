@@ -44,18 +44,36 @@ sim_data = function(.p) {
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean = coef1*U1 ),
-              
+
               B1 = rnorm( n = 1,
                           #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
                           mean = 3*U1 + 3*U2 ),
-              
+
               RA = rbinom( n = 1,
                            prob = expit(3*U2),
                            size = 1 ),
-              
+
               A = ifelse(RA == 0, NA, A1),
               B = B1,
               C = C1)
+    
+    # # 2023-08-23 - more experiments
+    # # SAVE - this should make CC biased (U1*U2 interaction)
+    # du = du %>% rowwise() %>%
+    #   mutate( A1 = rnorm( n = 1,
+    #                       mean = coef1*U1 ),
+    #           
+    #           B1 = rnorm( n = 1,
+    #                       #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
+    #                       mean = 3*U1 + 3*U2 + U1*U2 ),
+    #           
+    #           RA = rbinom( n = 1,
+    #                        prob = expit(3*U2),
+    #                        size = 1 ),
+    #           
+    #           A = ifelse(RA == 0, NA, A1),
+    #           B = B1,
+    #           C = C1)
     
     
     # cor(du %>% select(A1, B1, C1))
@@ -183,6 +201,85 @@ sim_data = function(.p) {
   }  # end of .p$dag_name == "1D"
   
   
+  
+  
+  
+  # ~ DAG 1I -----------------------------
+  # similar to 1D, but variable B1 is a forking variable on an m-backdoor path
+  
+  if ( .p$dag_name == "1I" ) {
+    
+    du = data.frame( A1 = rnorm( n = .p$N ),
+                     B1 = rnorm( n = .p$N ),
+                     C1 = rnorm( n = .p$N ) )
+    
+    coef1 = 2
+    
+    #**IMPORTANT: when coef_of_interest = A,
+    # this DAG has beta (below) estimated empirically.
+    # if any parameters below change, you'll need to re-estimate it.
+    du = du %>% rowwise() %>%
+      mutate( RA = rbinom( n = 1,
+                           prob = expit(3*B1),
+                           size = 1 ),
+              RB = rbinom( n = 1,
+                           prob = 0.9,  # 10% missing
+                           size = 1 ),
+              
+              A = ifelse(RA == 0, NA, A1),
+              B = ifelse(RB == 0, NA, B1),
+              C = C1)
+    
+    
+    # cor(du %>% select(A1, B1, C1))
+    
+    # make dataset for imputation (standard way: all measured variables)
+    di_std = du %>% select(A, B, C)
+    
+    
+    ### For just the intercept of A
+    if ( .p$coef_of_interest == "(Intercept)" ){ 
+      
+      # regression strings
+      form_string = "A ~ 1"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "A1 ~ 1"
+      
+      beta = 0
+      
+      # and for our imputation
+      di_ours = du %>% select(A, C)
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = "B"
+    }
+    
+    ### For the A-B association
+    if ( .p$coef_of_interest == "A" ){ 
+      
+      # regression strings
+      form_string = "B ~ A"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "B1 ~ A1"
+      
+      beta = NA
+      
+      # and for our imputation
+      di_ours = NULL
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = NULL
+    }
+    
+  }  # end of .p$dag_name == "1D"
+  
+  
+  
+  
+  
+  
   # ~ DAG 1G (Type-D) -----------------------------
   
   if ( .p$dag_name == "1G" ) {
@@ -196,29 +293,28 @@ sim_data = function(.p) {
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean = coef1*U1 ),
-              
+
               D1 = rnorm( n = 1,
                           mean = coef1*U1 + coef1*U2 ),
-              
+
               B1 = rnorm( n = 1,
                           mean = coef1*A1 ),
-              
+
               C1 = rnorm( n = 1,
                           mean = (coef1/2)*B1 ),
-              
+
               RA = rbinom( n = 1,
-                           prob = expit(1*C1 + 1*U2),
+                           prob = expit(1*C1 + 1*U2), #@2023-08-23 - these coefs result in low correlations between RA and C1, U2
                            size = 1 ),
               RB = rbinom( n = 1,
                            prob = 1, # NOT MISSING to avoid unblockable m-bd path
                            size = 1 ),
-              
+
               A = ifelse(RA == 0, NA, A1),
               B = ifelse(RB == 0, NA, B1),
               C = C1,
               D = D1)
     
-  
     #cor(du %>% select(A,B,C,D))
     
     # make dataset for imputation (standard way: all measured variables)
@@ -248,6 +344,97 @@ sim_data = function(.p) {
     
   }  # end of .p$dag_name == "1G"
   
+  # ~ DAG 1Gb (Type-D) -----------------------------
+  
+  if ( .p$dag_name == "1Gb" ) {
+    
+    du = data.frame( U1 = rnorm( n = .p$N ),
+                     U2 = rnorm( n = .p$N ),
+                     U3 = rnorm( n = .p$N ) )
+    
+    #coef1 = 2 # as in 2023-08-21 sims, where MICE unexpected performed badly
+    coef1 = 1
+    
+    # du = du %>% rowwise() %>%
+    #   mutate( A1 = rnorm( n = 1,
+    #                       mean = coef1*U1 ),
+    #           
+    #           D1 = rnorm( n = 1,
+    #                       mean = coef1*U1 + coef1*U2 ),
+    #           
+    #           B1 = rnorm( n = 1,
+    #                       mean = coef1*A1 ),
+    #           
+    #           C1 = rnorm( n = 1,
+    #                       mean = (coef1/2)*B1 ),
+    #           
+    #           RA = rbinom( n = 1,
+    #                        prob = expit(1*C1 + 1*U2),
+    #                        size = 1 ),
+    #           RB = rbinom( n = 1,
+    #                        prob = 1, # NOT MISSING to avoid unblockable m-bd path
+    #                        size = 1 ),
+    #           
+    #           A = ifelse(RA == 0, NA, A1),
+    #           B = ifelse(RB == 0, NA, B1),
+    #           C = C1,
+    #           D = D1)
+    
+    # 2023-08-23 - experiments
+    du = du %>% rowwise() %>%
+      mutate( A1 = rnorm( n = 1,
+                          mean = coef1*U1 ),
+              
+              D1 = rnorm( n = 1,
+                          mean = coef1*U1 + coef1*U2 ),
+              
+              B1 = rnorm( n = 1,
+                          mean = coef1*A1 + 2*U3  ),
+              
+              C1 = rnorm( n = 1,
+                          mean = (coef1/2)*B1 ),
+              
+              RA = rbinom( n = 1,
+                           prob = expit(3*C1 + 3*U2), # increased these 2023-08-23
+                           size = 1 ),
+              RB = rbinom( n = 1,
+                           prob = 1, # NOT MISSING to avoid unblockable m-bd path
+                           size = 1 ),
+              
+              A = ifelse(RA == 0, NA, A1),
+              B = ifelse(RB == 0, NA, B1),
+              C = C1,
+              D = D1)
+    
+    
+    #cor(du %>% select(A,B,C,D))
+    
+    # make dataset for imputation (standard way: all measured variables)
+    di_std = du %>% select(A, B, C, D)
+    
+    
+    ### For just the intercept of A
+    if ( .p$coef_of_interest == "(Intercept)" ){ 
+      stop("Intercept not implemented for this DAG")
+    }
+    
+    ### For the A-B association
+    if ( .p$coef_of_interest == "A" ){ 
+      form_string = "B ~ A"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "B1 ~ A1"
+      
+      beta = coef1
+      
+      # and for our imputation
+      di_ours = du %>% select(A, B, C)
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = "D"
+    }
+    
+  }  # end of .p$dag_name == "1G"
   
   # ~ DAG 1F (Type-D) -----------------------------
   

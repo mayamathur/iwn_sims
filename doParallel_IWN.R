@@ -124,8 +124,8 @@ if ( run.local == TRUE ) {
 
   scen.params = tidyr::expand_grid(
     
-    #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    rep.methods = "MICE-std", 
+    rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+    #rep.methods = "MICE-std", 
     
     model = "OLS",
     #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
@@ -134,18 +134,44 @@ if ( run.local == TRUE ) {
     
     # MICE parameters
     # as on cluster
-    imp_m = 50,  # also for Amelia
+    imp_m = 5,  # SET LOW
     imp_maxit = 100,
     mice_method = "norm",
-
+    
     # # for quicker sims
     # imp_m = 5,
     # imp_maxit = 5,
     # N = c(100),
     
     #dag_name = c( "1B", "1D", "1G", "1H" ),
-    dag_name = "1B"
+    dag_name = "1Gb"
   )
+  
+  
+  # scen.params = tidyr::expand_grid(
+  #   
+  #   #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+  #   rep.methods = "MICE-std", 
+  #   
+  #   model = "OLS",
+  #   #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+  #   coef_of_interest = "A",
+  #   N = c(1000),
+  #   
+  #   # MICE parameters
+  #   # as on cluster
+  #   imp_m = 50,  # also for Amelia
+  #   imp_maxit = 100,
+  #   mice_method = "norm",
+  # 
+  #   # # for quicker sims
+  #   # imp_m = 5,
+  #   # imp_maxit = 5,
+  #   # N = c(100),
+  #   
+  #   #dag_name = c( "1B", "1D", "1G", "1H" ),
+  #   dag_name = "1B"
+  # )
   # remove combos that aren't implemented
   scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H", "1F") &
                                             coef_of_interest == "(Intercept)") )
