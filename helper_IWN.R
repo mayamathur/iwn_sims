@@ -500,6 +500,69 @@ sim_data = function(.p) {
   
   
   
+  # ~ DAG 1Fb (Type-D) -----------------------------
+  # Ilya's suggestion
+  
+
+  if ( .p$dag_name == "1Fb" ) {
+    
+    du = data.frame( U1 = rnorm( n = .p$N ),
+                     U2 = rnorm( n = .p$N ),
+                     A1 = rnorm( n = .p$N ) )
+    
+    #coef1 = 2 # as in 2023-08-21 sims, where MICE unexpected performed badly
+    coef1 = 1
+    
+    du = du %>% rowwise() %>%
+      mutate( D1 = rnorm( n = 1,
+                          mean = coef1*U1 + coef1*U2 ),
+              
+              B1 = rnorm( n = 1,
+                          mean = coef1*A1 + coef1*U1 ),
+              
+              RA = rbinom( n = 1,
+                           prob = 1, # not missing
+                           size = 1 ),
+              RB = rbinom( n = 1,
+                           prob = expit(1*A1 + 1*D1), 
+                           size = 1 ),
+              
+              A = ifelse(RA == 0, NA, A1),
+              B = ifelse(RB == 0, NA, B1),
+              D = D1)
+    
+    
+    #cor(du %>% select(A,B,C,D))
+    
+    # make dataset for imputation (standard way: all measured variables)
+    di_std = du %>% select(A, B, D)
+    
+    
+    ### For just the intercept of A
+    if ( .p$coef_of_interest == "(Intercept)" ){ 
+      stop("Intercept not implemented for this DAG")
+    }
+    
+    ### For the A-B association
+    if ( .p$coef_of_interest == "A" ){ 
+      form_string = "B ~ A"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "B1 ~ A1"
+      
+      beta = coef1
+      
+      # and for our imputation
+      di_ours = du %>% select(A, B)
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = "D"
+    }
+    
+  }  # end of .p$dag_name == "1Fb"
+  
+  
+  
   
   # ~ DAG 1H (Type-M) -----------------------------
   
