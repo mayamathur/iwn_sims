@@ -37,6 +37,7 @@ source("analyze_sims_helper_IWN.R")
 library(data.table)
 library(dplyr)
 library(testthat)
+library(xlsx)
 # s = stitch_files(.results.singles.path = "/home/groups/manishad/IWN/sim_results/long",
 #                  .results.stitched.write.path = "/home/groups/manishad/IWN/sim_results/overall_stitched",
 #                  .name.prefix = "long_results",
@@ -160,7 +161,8 @@ as.data.frame(t)
 
 path = "/home/groups/manishad/IWN/overall_stitched"
 setwd(path)
-fwrite(t, "temp_agg.csv")
+write.xlsx(as.data.frame(t),
+           paste(Sys.Date(), "temp_agg.xlsx") )
 
 
 # ~ Write stitched.csv ---------------------------

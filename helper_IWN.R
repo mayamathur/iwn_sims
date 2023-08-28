@@ -524,7 +524,7 @@ sim_data = function(.p) {
                            prob = 1, # not missing
                            size = 1 ),
               RB = rbinom( n = 1,
-                           prob = expit(1*A1 + 1*D1), 
+                           prob = expit(1*A1 + 1*U2), 
                            size = 1 ),
               
               A = ifelse(RA == 0, NA, A1),
