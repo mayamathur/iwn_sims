@@ -511,7 +511,7 @@ sim_data = function(.p) {
                      A1 = rnorm( n = .p$N ) )
     
     #coef1 = 2 # as in 2023-08-21 sims, where MICE unexpected performed badly
-    coef1 = 1
+    coef1 = 1.5
     
     du = du %>% rowwise() %>%
       mutate( D1 = rnorm( n = 1,
@@ -540,7 +540,18 @@ sim_data = function(.p) {
     
     ### For just the intercept of A
     if ( .p$coef_of_interest == "(Intercept)" ){ 
-      stop("Intercept not implemented for this DAG")
+      form_string = "B ~ 1"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "B1 ~ 1"
+      
+      beta = 0
+      
+      # and for our imputation
+      di_ours = du %>% select(A, B)
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = "D"
     }
     
     ### For the A-B association

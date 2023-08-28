@@ -45,7 +45,7 @@ scen.params = tidyr::expand_grid(
   imp_maxit = 200,
   mice_method = "norm",
 
-  dag_name = c( "1I" ),
+  dag_name = c( "1I", "1Fb" ),
   N = c(1000)
 )
 
@@ -131,7 +131,7 @@ n.files
 # xxx files
 path = "/home/groups/manishad/IWN"
 setwd( paste(path, "/sbatch_files", sep="") )
-for (i in 1:20) {
+for (i in 1:40) {
   system( paste("sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/", i, ".sbatch", sep="") )
 }
 

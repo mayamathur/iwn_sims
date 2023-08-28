@@ -46,7 +46,7 @@ p = tidyr::expand_grid(
   imp_maxit = NA,
   mice_method = NA,
   
-  dag_name = c( "1I" ),
+  dag_name = c( "1Fb" ),
   N = c(5000)
 )
 
@@ -75,7 +75,7 @@ p
 
 #### Correlation of counterfactuals
 cor( du %>% select(A1, B1, U1, U2, U3, C1, D1, RA))
-cor( du %>% select(A1, B1, C1, RA, RB))
+cor( du %>% select(A1, B1, D1, RB))
 
 
 # ~ Missingness patterns ------------------------------
