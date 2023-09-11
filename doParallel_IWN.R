@@ -121,14 +121,14 @@ if ( run.local == TRUE ) {
   
   
   # ~~ ********** Set Sim Params: Local Run -----------------------------
-
+  
   scen.params = tidyr::expand_grid(
     
-    rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    #rep.methods = "MICE-std", 
+    #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+    rep.methods = "gold ; MICE-std ; Am-std", 
     
     model = "OLS",
-    coef_of_interest = "(Intercept)",  # "(Intercept)" or "A"
+    coef_of_interest = "A",  # "(Intercept)" or "A"
     #coef_of_interest = "A",
     N = c(1000),
     
@@ -144,7 +144,7 @@ if ( run.local == TRUE ) {
     # N = c(100),
     
     #dag_name = c( "1B", "1D", "1G", "1H" ),
-    dag_name = "1Fb"
+    dag_name = "1J"
   )
   
   
@@ -256,7 +256,7 @@ for ( scen in scens_to_run ) {
       ( beta = as.numeric(sim_obj$beta) )
       ( exclude_from_imp_model = as.character( sim_obj$exclude_from_imp_model ) )
       
-  
+      
       # coefficient of interest for gold-standard model
       if ( coef_of_interest == "(Intercept)" ){
         coef_of_interest_gold = "(Intercept)"
@@ -265,7 +265,7 @@ for ( scen in scens_to_run ) {
         #  (e.g., A), so need to add "1" to use the variable
         # that's in gold-standard model
         coef_of_interest_gold = paste(coef_of_interest, "1", sep = "")
-
+        
       }
       
       # some methods don't make sense for certain combos of DAG and coef_of_interest
@@ -275,16 +275,16 @@ for ( scen in scens_to_run ) {
            (p$dag_name == "1B" & coef_of_interest == "A") ) {
         all.methods = all.methods[ !all.methods %in% c("MICE-ours", "Am-ours") ]
       }
-
+      
       
       # ~ Make Imputed Data ------------------------------
       
-    
+      
       # ~~ MICE-std ----
       # details of how mice() implements pmm:
       # ?mice.impute.pmm
       if ( "MICE-std" %in% all.methods & !is.null(di_std) ) {
-    
+        
         imps_mice_std = mice( di_std,
                               maxit = p$imp_maxit,
                               m = p$imp_m,
@@ -302,9 +302,6 @@ for ( scen in scens_to_run ) {
       } else {
         imps_mice_std = NULL
       }
-      
-      
-
       
       
       
@@ -379,8 +376,8 @@ for ( scen in scens_to_run ) {
       
       # ~~ MICE-ours-pred ----
       # MICE by adjusting predictor matrix
-      if ( "MICE-ours-pred" %in% all.methods & !is.null(di_std) ) {
-
+      if ( "MICE-ours-pred" %in% all.methods & !is.null(di_std) & !is.null(exclude_from_imp_model) ) {
+        
         # modify predictor matrix instead of restricting dataset
         ini = mice(di_std, maxit=0)
         pred = ini$predictorMatrix
@@ -397,7 +394,7 @@ for ( scen in scens_to_run ) {
         actual_pred = imps_mice_ours_pred$predictorMatrix
         sums = colSums(actual_pred)  # if >0, means var was used in imp model
         mice_ours_pred_vars_included = names( sums[ sums > 0 ] )
-
+        
         # sanity check
         imp1 = complete(imps_mice_ours_pred, 1)
         
@@ -421,7 +418,7 @@ for ( scen in scens_to_run ) {
                               p2s = 0 # don't print output
         )
         
-
+        
         imp1 = imps_am_std$imputations$imp1
         
         if ( any(is.na(imp1)) ) {
@@ -502,7 +499,7 @@ for ( scen in scens_to_run ) {
       if (run.local == TRUE) srr(rep.res)
       
       
-
+      
       # ~~ MICE-std ----
       if ( "MICE-std" %in% all.methods ) {
         rep.res = run_method_safe(method.label = c("MICE-std"),
@@ -625,10 +622,12 @@ for ( scen in scens_to_run ) {
         rep.res = rep.res %>% add_column( sancheck.di_ours.vars = paste( names(di_ours), collapse = " " ) )
       }
       
-
-      if ( !is.null(mice_ours_pred_vars_included) ) {
-        rep.res = rep.res %>% add_column( sancheck.mice_ours_pred_vars_included = paste( mice_ours_pred_vars_included, collapse = " " ) )
+      if ( exists("mice_ours_pred_vars_included") ){
+        if ( !is.null(mice_ours_pred_vars_included) ) {
+          rep.res = rep.res %>% add_column( sancheck.mice_ours_pred_vars_included = paste( mice_ours_pred_vars_included, collapse = " " ) )
+        }
       }
+      
       
       cat("\n\n")
       print(rep.res)
