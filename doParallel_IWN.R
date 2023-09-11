@@ -128,7 +128,7 @@ if ( run.local == TRUE ) {
     rep.methods = "gold ; MICE-std ; Am-std", 
     
     model = "OLS",
-    coef_of_interest = "A",  # "(Intercept)" or "A"
+    coef_of_interest = "A:C",  # "(Intercept)" or "A"
     #coef_of_interest = "A",
     N = c(1000),
     
@@ -144,7 +144,7 @@ if ( run.local == TRUE ) {
     # N = c(100),
     
     #dag_name = c( "1B", "1D", "1G", "1H" ),
-    dag_name = "1J"
+    dag_name = "1K"
   )
   
   
@@ -260,12 +260,14 @@ for ( scen in scens_to_run ) {
       # coefficient of interest for gold-standard model
       if ( coef_of_interest == "(Intercept)" ){
         coef_of_interest_gold = "(Intercept)"
+        
+      } else if ( coef_of_interest == "A:C"){
+        coef_of_interest_gold = "A1:C1"
       } else {
         # *this assumes coef_of_interest is always the factual variable
         #  (e.g., A), so need to add "1" to use the variable
         # that's in gold-standard model
         coef_of_interest_gold = paste(coef_of_interest, "1", sep = "")
-        
       }
       
       # some methods don't make sense for certain combos of DAG and coef_of_interest

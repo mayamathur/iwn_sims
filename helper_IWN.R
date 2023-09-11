@@ -675,8 +675,6 @@ sim_data = function(.p) {
               C = ifelse(RC == 0, NA, C1),
               D = ifelse(RD == 0, NA, D1) )
     
-
-    
     # remove pattern indicator
     du = du %>% select( -pattern )
     
@@ -706,6 +704,83 @@ sim_data = function(.p) {
     }
     
   }  # end of .p$dag_name == "1J"
+  
+  
+  
+  
+  # ~ DAG 1K (EMM to illustrate different analysis laws) -----------------------------
+  
+  if ( .p$dag_name == "1K" ) {
+    
+    du = data.frame( C1 = rnorm( n = .p$N ),  # EMM
+                     A1 = rnorm( n = .p$N ) )
+    
+    coef1 = 2
+    
+    du = du %>% rowwise() %>%
+      mutate( 
+              B1 = rnorm( n = 1,
+                          mean = coef1*C1 + coef1*A1 + coef1*C1*A1 ),
+              
+              
+              RA = rbinom( n = 1,
+                           prob = 1, # no missingness
+                           size = 1 ),
+              RB = rbinom( n = 1,
+                           prob = 1, # no missingness
+                           size = 1 ),
+              
+              RC = rbinom( n = 1,
+                           prob = expit(2*C1),
+                           size = 1 ),
+              A = ifelse(RA == 0, NA, A1),
+              B = ifelse(RB == 0, NA, B1),
+              C = ifelse(RC == 0, NA, C1) )
+    
+    # make dataset for imputation (standard way: all measured variables)
+    di_std = du %>% select(A, B, C)
+    
+    ### For just the intercept of A
+    if ( .p$coef_of_interest == "(Intercept)" ){ 
+      stop("Intercept not implemented for this DAG")
+    }
+    
+    ### For the A-B association without including the EMM
+    if ( .p$coef_of_interest == "A" ){ 
+      # regression strings
+      form_string = "B ~ A"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "B1 ~ A1"
+      
+      beta = coef1
+      
+      # and for our imputation
+      di_ours = du %>% select(A, B)
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = c("C")
+    }
+    
+    ### For the EMM coefficient
+    if ( .p$coef_of_interest == "A:C" ){ 
+      # regression strings
+      form_string = "B ~ A*C"
+      
+      # gold-standard model uses underlying variables
+      gold_form_string = "B1 ~ A1*C1"
+      
+      beta = coef1
+      
+      # and for our imputation
+      di_ours = NULL
+      
+      # custom predictor matrix for MICE-ours-pred
+      exclude_from_imp_model = NULL
+    }
+    
+  }  # end of .p$dag_name == "1K"
+  
   
   
   
