@@ -39,13 +39,14 @@ scen.params = tidyr::expand_grid(
   #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours",
 
   model = "OLS",
-  coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+  #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+  coef_of_interest = c( "A", "A:C"),  # "(Intercept)" or "A"
 
   imp_m = 50,
   imp_maxit = 200,
   mice_method = "norm",
 
-  dag_name = c( "1I", "1Fb" ),
+  dag_name = c( "1K" ),
   N = c(1000)
 )
 
@@ -131,7 +132,7 @@ n.files
 # xxx files
 path = "/home/groups/manishad/IWN"
 setwd( paste(path, "/sbatch_files", sep="") )
-for (i in 1:40) {
+for (i in 1:20) {
   system( paste("sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/", i, ".sbatch", sep="") )
 }
 

@@ -30,7 +30,7 @@
 path = "/home/groups/manishad/IWN"
 setwd(path)
 source("helper_IWN.R")
-source("analyze_sims_helper_IWN.R")
+
 
 # PRELIMINARIES ----------------------------------------------
 
