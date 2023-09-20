@@ -67,6 +67,7 @@ sbatch -p qsu,normal,owners /home/groups/manishad/IWN/sbatch_files/1.sbatch
 
 scp mmathur@login.sherlock.stanford.edu /home/groups/manishad/IWN/results/overall_stitched/stitched.csv ~/Desktop
 
+
 ####################### CLEAN UP ####################### 
 
 

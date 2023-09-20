@@ -724,10 +724,10 @@ sim_data = function(.p) {
               
               
               RA = rbinom( n = 1,
-                           prob = 1, # no missingness
+                           prob = 0.5, # this variable is MCAR
                            size = 1 ),
               RB = rbinom( n = 1,
-                           prob = 1, # no missingness
+                           prob = 0.5, # this variable is MCAR
                            size = 1 ),
               
               RC = rbinom( n = 1,
