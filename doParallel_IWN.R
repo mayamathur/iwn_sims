@@ -351,6 +351,19 @@ for ( scen in scens_to_run ) {
           summary( lm(B ~ A, data = imp1) )
         }
         
+        # DAG 1J
+        if ( p$dag_name == "1J" ) {
+          
+          cor(du)
+
+          # look at first mice imputation
+          imp1 = complete(imps_mice_std,1)
+          cor(imp1) # has CORRECT (0) association between C and D; unexpected since they're never observed together
+          
+   
+          summary( lm(B ~ A, data = imp1) )
+        } 
+        
       }
       
       # ~~ MICE-ours ----
