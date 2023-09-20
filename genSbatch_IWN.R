@@ -35,18 +35,18 @@ lapply( allPackages,
 # ISOLATE SCENS
 scen.params = tidyr::expand_grid(
 
-  rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-  #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours",
+  #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+  rep.methods = "gold ; MICE-std ; Am-std",
 
   model = "OLS",
   #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
-  coef_of_interest = c( "A", "A:C"),  # "(Intercept)" or "A"
+  coef_of_interest = c("A"),  # "(Intercept)" or "A"
 
   imp_m = 50,
   imp_maxit = 200,
   mice_method = "norm",
 
-  dag_name = c( "1K" ),
+  dag_name = c( "1J" ),
   N = c(1000)
 )
 
@@ -91,7 +91,7 @@ write.csv( scen.params, "scen_params.csv", row.names = FALSE )
 source("helper_IWN.R")
 
 # number of sbatches to generate (i.e., iterations within each scenario)
-n.reps.per.scen = 500
+n.reps.per.scen = 1000
 n.reps.in.doParallel = 50
 ( n.files = ( n.reps.per.scen / n.reps.in.doParallel ) * n.scen )
 

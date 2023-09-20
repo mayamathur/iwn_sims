@@ -644,7 +644,7 @@ sim_data = function(.p) {
     
     du = du %>% rowwise() %>%
       mutate( D1 = rnorm( n = 1,  # second confounder
-                          mean = coef1*C1 ),  # associated with C1
+                          mean = 2*coef1*C1 ),  # associated with C1
                           #mean = 0 ),  # not associated with C1
               
               A1 = rnorm( n = 1,
@@ -652,7 +652,7 @@ sim_data = function(.p) {
               
               B1 = rnorm( n = 1,
                           #mean = coef1*C1 + coef1*D1 + coef1*A1 ),
-                          mean = coef1*A1 + coef1*C1*D1 ), 
+                          mean = coef1*A1 + 2*coef1*C1*D1 ), 
                           #mean = coef1*A1 + -coef1*C1 + coef1*D1 + 2*C1*D1 ),
               
 
