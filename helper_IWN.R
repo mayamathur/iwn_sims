@@ -637,6 +637,7 @@ sim_data = function(.p) {
     
     du = data.frame( C1 = rnorm( n = .p$N ) )
     
+    coefAB = 0
     coef1 = 1
     #coef1 = 2  # as in 2023-08-21 sims, where MICE unexpected performed badly
     
@@ -650,33 +651,60 @@ sim_data = function(.p) {
               
               B1 = rnorm( n = 1,
                           #mean = coef1*C1 + coef1*D1 + coef1*A1 ),
-                          mean = 0*A1 + 2*coef1*C1*D1 ) )
+                          mean = coefAB*A1 + 2*coef1*C1*D1 ) )
               #mean = coef1*A1 + -coef1*C1 + coef1*D1 + 2*C1*D1 ) )
+    
     
     
     # for file-matching, need to impose missingness a little differently
     # randomly assign each row to a pattern
-    # complete vars for each pattern:
-    # pattern 1: (A, C, D) 
-    # pattern 2: (A, outcome B)
-    # so confounders never measured among those with outcome observed
     patterns = c(1,2)
     du$pattern = sample(patterns, size = nrow(du), replace = TRUE)
     
     du = du %>% rowwise %>%
-      mutate( RA = 1,
+      mutate( RA = rbinom( n = 1,
+                      prob = 0.5, # not missing
+                      size = 1 ),
+              RB = rbinom( n = 1,
+                      prob = 0.5, # not missing
+                      size = 1 )
               
               # observed only for pattern 1
               RC = ifelse( pattern == 1, 1, 0),
-              RD = ifelse( pattern == 1, 1, 0),
               
               # observed only for pattern 2
-              RB = ifelse( pattern == 2, 1, 0),
+              RD = ifelse( pattern == 2, 1, 0),
+              
               
               A = ifelse(RA == 0, NA, A1),
               B = ifelse(RB == 0, NA, B1),
               C = ifelse(RC == 0, NA, C1),
               D = ifelse(RD == 0, NA, D1) )
+    
+    
+    # # for file-matching, need to impose missingness a little differently
+    # # randomly assign each row to a pattern
+    # # complete vars for each pattern:
+    # # pattern 1: (A, C, D) 
+    # # pattern 2: (A, outcome B)
+    # # so confounders never measured among those with outcome observed
+    # patterns = c(1,2)
+    # du$pattern = sample(patterns, size = nrow(du), replace = TRUE)
+    # 
+    # du = du %>% rowwise %>%
+    #   mutate( RA = 1,
+    #           
+    #           # observed only for pattern 1
+    #           RC = ifelse( pattern == 1, 1, 0),
+    #           RD = ifelse( pattern == 1, 1, 0),
+    #           
+    #           # observed only for pattern 2
+    #           RB = ifelse( pattern == 2, 1, 0),
+    #           
+    #           A = ifelse(RA == 0, NA, A1),
+    #           B = ifelse(RB == 0, NA, B1),
+    #           C = ifelse(RC == 0, NA, C1),
+    #           D = ifelse(RD == 0, NA, D1) )
     
     #browser()
     
@@ -706,7 +734,7 @@ sim_data = function(.p) {
       # gold-standard model uses underlying variables
       gold_form_string = "B1 ~ A1 + C1 + D1"
       
-      beta = coef1  
+      beta = coefAB  
       
       # and for our imputation
       di_ours = NULL  # same as std imputation
