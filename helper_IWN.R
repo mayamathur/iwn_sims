@@ -631,9 +631,7 @@ sim_data = function(.p) {
   }  # end of .p$dag_name == "1H"
   
   
-  
-  
-  # ~ DAG 1J (file-matching on 2 confounders) -----------------------------
+  # ~ as in 2020-9-20 - DAG 1J (file-matching on 2 confounders) -----------------------------
   
   if ( .p$dag_name == "1J" ) {
     
@@ -645,36 +643,38 @@ sim_data = function(.p) {
     du = du %>% rowwise() %>%
       mutate( D1 = rnorm( n = 1,  # second confounder
                           mean = 2*coef1*C1 ),  # associated with C1
-                          #mean = 0 ),  # not associated with C1
+              #mean = 0 ),  # not associated with C1
               
               A1 = rnorm( n = 1,
                           mean = coef1*C1 + coef1*D1 ),
               
               B1 = rnorm( n = 1,
                           #mean = coef1*C1 + coef1*D1 + coef1*A1 ),
-                          mean = coef1*A1 + 2*coef1*C1*D1 ), 
-                          #mean = coef1*A1 + -coef1*C1 + coef1*D1 + 2*C1*D1 ),
-              
-
-              RA = rbinom( n = 1,
-                            prob = 0.5, 
-                            size = 1 ),
-              RB = rbinom( n = 1,
-                            prob = 0.5, 
-                            size = 1 ),
-              A = ifelse(RA == 0, NA, A1),
-              B = ifelse(RB == 0, NA, B1) )
+                          mean = coef1*A1 + 2*coef1*C1*D1 ) )
+              #mean = coef1*A1 + -coef1*C1 + coef1*D1 + 2*C1*D1 ) )
     
     
     # for file-matching, need to impose missingness a little differently
     # randomly assign each row to a pattern
+    # complete vars for each pattern:
+    # pattern 1: (A, C, D) 
+    # pattern 2: (A, outcome B)
+    # so confounders never measured among those with outcome observed
     patterns = c(1,2)
     du$pattern = sample(patterns, size = nrow(du), replace = TRUE)
     
     du = du %>% rowwise %>%
-      mutate( RC = ifelse( pattern == 1, 1, 0),
-              RD = ifelse( pattern == 2, 1, 0),
+      mutate( RA = 1,
               
+              # observed only for pattern 1
+              RC = ifelse( pattern == 1, 1, 0),
+              RD = ifelse( pattern == 1, 1, 0),
+              
+              # observed only for pattern 2
+              RB = ifelse( pattern == 2, 1, 0),
+              
+              A = ifelse(RA == 0, NA, A1),
+              B = ifelse(RB == 0, NA, B1),
               C = ifelse(RC == 0, NA, C1),
               D = ifelse(RD == 0, NA, D1) )
     
@@ -715,6 +715,89 @@ sim_data = function(.p) {
     }
     
   }  # end of .p$dag_name == "1J"
+  
+  # # ~ as in 2020-9-20 - DAG 1J (file-matching on 2 confounders) -----------------------------
+  # 
+  # if ( .p$dag_name == "1J" ) {
+  #   
+  #   du = data.frame( C1 = rnorm( n = .p$N ) )
+  #   
+  #   coef1 = 1
+  #   #coef1 = 2  # as in 2023-08-21 sims, where MICE unexpected performed badly
+  #   
+  #   du = du %>% rowwise() %>%
+  #     mutate( D1 = rnorm( n = 1,  # second confounder
+  #                         mean = 2*coef1*C1 ),  # associated with C1
+  #                         #mean = 0 ),  # not associated with C1
+  #             
+  #             A1 = rnorm( n = 1,
+  #                         mean = coef1*C1 + coef1*D1 ),
+  #             
+  #             B1 = rnorm( n = 1,
+  #                         #mean = coef1*C1 + coef1*D1 + coef1*A1 ),
+  #                         mean = coef1*A1 + 2*coef1*C1*D1 ), 
+  #                         #mean = coef1*A1 + -coef1*C1 + coef1*D1 + 2*C1*D1 ),
+  #             
+  # 
+  #             RA = rbinom( n = 1,
+  #                           prob = 1, 
+  #                           size = 1 ),
+  #             RB = rbinom( n = 1,
+  #                           prob = 1, 
+  #                           size = 1 ),
+  #             A = ifelse(RA == 0, NA, A1),
+  #             B = ifelse(RB == 0, NA, B1) )
+  #   
+  #   
+  #   # for file-matching, need to impose missingness a little differently
+  #   # randomly assign each row to a pattern
+  #   patterns = c(1,2)
+  #   du$pattern = sample(patterns, size = nrow(du), replace = TRUE)
+  #   
+  #   du = du %>% rowwise %>%
+  #     mutate( RC = ifelse( pattern == 1, 1, 0),
+  #             RD = ifelse( pattern == 2, 1, 0),
+  #             
+  #             C = ifelse(RC == 0, NA, C1),
+  #             D = ifelse(RD == 0, NA, D1) )
+  #   
+  #   #browser()
+  #   
+  #   # sanity check: how severe is the confounding?
+  #   # lm( B1 ~ A1, data = du )
+  #   # lm( B1 ~ A1 + C1, data = du )
+  #   # lm( B1 ~ A1 + C1 + D1, data = du )
+  #   # lm( B1 ~ A1 + C1*D1, data = du )
+  #   
+  #   # remove pattern indicator
+  #   du = du %>% select( -pattern )
+  #   
+  #   # make dataset for imputation (standard way: all measured variables)
+  #   di_std = du %>% select(A, B, C, D)
+  #   
+  #   ### For just the intercept of A
+  #   if ( .p$coef_of_interest == "(Intercept)" ){ 
+  #     stop("Intercept not implemented for this DAG")
+  #   }
+  #   
+  #   ### For the A-B association
+  #   if ( .p$coef_of_interest == "A" ){ 
+  #     # regression strings
+  #     form_string = "B ~ A + C + D"
+  #     
+  #     # gold-standard model uses underlying variables
+  #     gold_form_string = "B1 ~ A1 + C1 + D1"
+  #     
+  #     beta = coef1  # mediation total effect
+  #     
+  #     # and for our imputation
+  #     di_ours = NULL  # same as std imputation
+  #     
+  #     # custom predictor matrix for MICE-ours-pred
+  #     exclude_from_imp_model = NULL
+  #   }
+  #   
+  # }  # end of .p$dag_name == "1J"
   
   
   
@@ -819,6 +902,22 @@ sim_data = function(.p) {
                beta = beta) )
   
 }
+
+# for testing:
+if (FALSE){
+  .p = data.frame(
+    model = "OLS",
+    #coef_of_interest = "A:C",  # "(Intercept)" or "A"
+    coef_of_interest = "A",
+    N = c(1000),
+    
+    dag_name = "1J"
+  )
+  
+  sim_data(.p)
+}
+
+
 
 
 # ANALYSIS METHOD FNS ---------------------
