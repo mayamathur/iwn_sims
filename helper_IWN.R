@@ -657,10 +657,10 @@ sim_data = function(.p) {
               
 
               RA = rbinom( n = 1,
-                            prob = 1, # no missingness
+                            prob = 0.5, 
                             size = 1 ),
               RB = rbinom( n = 1,
-                            prob = 1, # no missingness
+                            prob = 0.5, 
                             size = 1 ),
               A = ifelse(RA == 0, NA, A1),
               B = ifelse(RB == 0, NA, B1) )
