@@ -1,31 +1,14 @@
 
 
+path = "/home/groups/manishad/IWN"
+setwd(path)
+source("stitch_on_sherlock_helper.R")
 
-# run this interactively in ml load R or via:
-#   sbatch -p qsu,owners,normal /home/groups/manishad/IWN/job_stitch.sbatch
-# scontrol show job 33834701
-# look at its out file:
-# cd /home/groups/manishad/IWN
-# cd /home/users/mmathur
-# less rm_stitch.out
-
-# for non-huge simulations, can often run this script interactively in a higher-memory
-#  Sherlock session:
-# ml load R/4.1.2
-# srun --mem=32G --time=3:00:00 --pty bash
-# R
+stitch()
 
 
-# to be run by stitch.sbatch or manually
-# To quickly run this script in high-mem interactive session:
-# setwd("/home/groups/manishad/IWN"); source("stitch_on_sherlock_IWN.R")
 
-# # load command line arguments
-# args = commandArgs(trailingOnly = TRUE)
-# start.num = as.numeric( args[1] )  # starting results number to stitch
-# stop.num = as.numeric( args[2] )  # stopping results number to stitch
-
-
+# TO RUN STITCH() LINE-BY-LINE: ----------------------------------------------
 
 path = "/home/groups/manishad/IWN"
 setwd(path)

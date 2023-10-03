@@ -631,7 +631,7 @@ sim_data = function(.p) {
   }  # end of .p$dag_name == "1H"
   
   
-  # ~ as in 2020-9-20 - DAG 1J (file-matching on 2 confounders) -----------------------------
+  # ~ 2023-10-03 - DAG 1J (file-matching on 2 confounders) -----------------------------
   
   if ( .p$dag_name == "1J" ) {
     
@@ -650,7 +650,7 @@ sim_data = function(.p) {
               
               B1 = rnorm( n = 1,
                           #mean = coef1*C1 + coef1*D1 + coef1*A1 ),
-                          mean = coef1*A1 + 2*coef1*C1*D1 ) )
+                          mean = 0*A1 + 2*coef1*C1*D1 ) )
               #mean = coef1*A1 + -coef1*C1 + coef1*D1 + 2*C1*D1 ) )
     
     
@@ -685,6 +685,7 @@ sim_data = function(.p) {
     # lm( B1 ~ A1 + C1, data = du )
     # lm( B1 ~ A1 + C1 + D1, data = du )
     # lm( B1 ~ A1 + C1*D1, data = du )
+    # cor(du %>% select(A1, B1, C1, D1))
     
     # remove pattern indicator
     du = du %>% select( -pattern )
@@ -705,7 +706,7 @@ sim_data = function(.p) {
       # gold-standard model uses underlying variables
       gold_form_string = "B1 ~ A1 + C1 + D1"
       
-      beta = coef1  # mediation total effect
+      beta = coef1  
       
       # and for our imputation
       di_ours = NULL  # same as std imputation
@@ -716,7 +717,7 @@ sim_data = function(.p) {
     
   }  # end of .p$dag_name == "1J"
   
-  # # ~ as in 2020-9-20 - DAG 1J (file-matching on 2 confounders) -----------------------------
+  # # ~ as in 2023-9-20 - DAG 1J (file-matching on 2 confounders) -----------------------------
   # 
   # if ( .p$dag_name == "1J" ) {
   #   
