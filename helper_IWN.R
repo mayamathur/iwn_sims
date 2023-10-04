@@ -638,12 +638,12 @@ sim_data = function(.p) {
     du = data.frame( C1 = rnorm( n = .p$N ) )
     
     coefAB = 0
-    coef1 = 1
-    #coef1 = 2  # as in 2023-08-21 sims, where MICE unexpected performed badly
+    coefCD = 2
+    coef1 = 0.5
     
     du = du %>% rowwise() %>%
       mutate( D1 = rnorm( n = 1,  # second confounder
-                          mean = 2*coef1*C1 ),  # associated with C1
+                          mean = coefCD*C1 ),  # associated with C1
               #mean = 0 ),  # not associated with C1
               
               A1 = rnorm( n = 1,
@@ -651,7 +651,7 @@ sim_data = function(.p) {
               
               B1 = rnorm( n = 1,
                           #mean = coef1*C1 + coef1*D1 + coef1*A1 ),
-                          mean = coefAB*A1 + 2*coef1*C1*D1 ) )
+                          mean = coefAB*A1 + coef1*C1 + coef1*D1 ) )
               #mean = coef1*A1 + -coef1*C1 + coef1*D1 + 2*C1*D1 ) )
     
     
@@ -663,11 +663,11 @@ sim_data = function(.p) {
     
     du = du %>% rowwise %>%
       mutate( RA = rbinom( n = 1,
-                      prob = 0.5, # not missing
+                      prob = 1, 
                       size = 1 ),
               RB = rbinom( n = 1,
-                      prob = 0.5, # not missing
-                      size = 1 )
+                      prob = 1, 
+                      size = 1 ),
               
               # observed only for pattern 1
               RC = ifelse( pattern == 1, 1, 0),
@@ -680,40 +680,6 @@ sim_data = function(.p) {
               B = ifelse(RB == 0, NA, B1),
               C = ifelse(RC == 0, NA, C1),
               D = ifelse(RD == 0, NA, D1) )
-    
-    
-    # # for file-matching, need to impose missingness a little differently
-    # # randomly assign each row to a pattern
-    # # complete vars for each pattern:
-    # # pattern 1: (A, C, D) 
-    # # pattern 2: (A, outcome B)
-    # # so confounders never measured among those with outcome observed
-    # patterns = c(1,2)
-    # du$pattern = sample(patterns, size = nrow(du), replace = TRUE)
-    # 
-    # du = du %>% rowwise %>%
-    #   mutate( RA = 1,
-    #           
-    #           # observed only for pattern 1
-    #           RC = ifelse( pattern == 1, 1, 0),
-    #           RD = ifelse( pattern == 1, 1, 0),
-    #           
-    #           # observed only for pattern 2
-    #           RB = ifelse( pattern == 2, 1, 0),
-    #           
-    #           A = ifelse(RA == 0, NA, A1),
-    #           B = ifelse(RB == 0, NA, B1),
-    #           C = ifelse(RC == 0, NA, C1),
-    #           D = ifelse(RD == 0, NA, D1) )
-    
-    #browser()
-    
-    # sanity check: how severe is the confounding?
-    # lm( B1 ~ A1, data = du )
-    # lm( B1 ~ A1 + C1, data = du )
-    # lm( B1 ~ A1 + C1 + D1, data = du )
-    # lm( B1 ~ A1 + C1*D1, data = du )
-    # cor(du %>% select(A1, B1, C1, D1))
     
     # remove pattern indicator
     du = du %>% select( -pattern )
@@ -1106,6 +1072,45 @@ my_ols_hc0 = function( coefName, ols ){
     lo = bhat.ols - tcrit * se.hc0,
     hi = bhat.ols + tcrit * se.hc0,
     pval =  2 * ( 1 - pt(t, df = ols$df.residual ) ) ) )
+}
+
+# correlation of proxies in du only
+# i.e., not variables with "R" or "1"
+proxy_cor = function(.du) {
+  temp = .du %>%
+    select( -contains("R"), -contains("1") ) %>% select(sort(names(.)))
+  round( cor(temp, use = "pairwise.complete.obs" ), 3 )
+}
+
+# correlation of counterfactuals in du only
+cfact_cor = function(.du) {
+  
+  temp = .du %>%
+    select( contains("1") ) %>% select(sort(names(.)))
+  round( cor(temp), 3 )
+}
+
+# average correlation across imputations
+# works for both Amelia and mice
+imps_cor = function(.imps){
+  
+  if ( class(.imps) == "amelia" ) {
+    m = length(.imps$imputations)
+    
+    cors = lapply( X = 1:m,
+                   FUN = function(.m) cor( imps_am_std$imputations[[.m]] ) )
+  }
+  
+  if ( class(.imps) == "mids" ) {
+    m = .imps$m
+    
+    cors = lapply( X = 1:m,
+                   FUN = function(.m) cor(complete(.imps, .m) ) )
+    
+  }
+  
+  ( mean_cor_imps = Reduce("+", cors) / length(cors) )
+  round(mean_cor_imps, 3)
 }
 
 

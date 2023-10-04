@@ -3,9 +3,6 @@
 
 # PRELIMINARIES -----------------------------------------
 
-path = "/home/groups/manishad/IWN"
-setwd(path)
-source("helper_IWN.R")
 
 allPackages = c("here",
                 "crayon",
@@ -20,7 +17,8 @@ allPackages = c("here",
                 "tibble",
                 "testthat",
                 "Hmisc",
-                "stringr")
+                "stringr",
+                "Amelia")
 
 ( packagesNeeded = allPackages[ !( allPackages %in% installed.packages()[,"Package"] ) ] )
 if( length(packagesNeeded) > 0 ) install.packages(packagesNeeded)
@@ -30,6 +28,11 @@ lapply( allPackages,
         require,
         character.only = TRUE)
 
+
+setwd(here())
+source("helper_IWN.R")
+
+options(scipen=999)
 
 
 # PICK DAG TO GENERATE -----------------------------------------
@@ -42,13 +45,15 @@ p = tidyr::expand_grid(
   model = "OLS",
   coef_of_interest = "A",
   
-  imp_m = NA,
+  imp_m = 50,
   imp_maxit = NA,
   mice_method = NA,
   
-  dag_name = c( "1Fb" ),
+  dag_name = c( "1J" ),
   N = c(5000)
 )
+
+
 
 
 # ~ Simulate Dataset ------------------------------
@@ -83,6 +88,71 @@ cor( du %>% select(A1, B1, D1, RB))
 #### Proportion missing by variable
 colMeans(is.na(du))
 
+
+
+
+
+# ~~ DAG 1J  -------------------------------------------------
+# 2023-10-04 
+
+sim_obj = sim_data(.p = p)
+
+du = sim_obj$du
+di_std = sim_obj$di_std
+di_ours = sim_obj$di_ours
+
+imps_am_std = amelia( as.data.frame(di_std),
+                      m=p$imp_m,
+                      p2s = 0 # don't print output
+)
+
+### Make imputations
+imp1 = imps_am_std$imputations$imp1
+
+if ( any(is.na(imp1)) ) {
+  message("MI left NAs in dataset - what a butt")
+  imps_am_std = NULL
+}
+
+
+### Correlation in imputations vs. underlying
+
+# correlation in imputations
+imps_cor(imps_am_std)
+
+# compare to underlying dataset
+cfact_cor(du)
+
+#**almost all of the correlation between C and D is preserved in the imputations! 
+
+
+### Analysis models
+
+# OLS
+fit_regression(form_string = "B ~ A + C * D",
+               model = "OLS",
+               coef_of_interest = "A",
+               miss_method = "MI",
+               du = NULL,
+               imps = imps_am_std)
+
+# logistic
+form_string = "I(B>0) ~ A + C * D"
+fit_regression(form_string = form_string,
+               model = "logistic",
+               coef_of_interest = "A",
+               miss_method = "MI",
+               du = NULL,
+               imps = imps_am_std)
+
+summary( glm( eval( parse(text = "I(B1>0) ~ A1 + C1 * D1") ),
+     data = du,
+     family = binomial(link = "logit") ) )
+
+# strength of confounding in general pop
+# I want these to differ wrt coef of A
+summary(lm(B1 ~ A1 + C1*D1, data = du))
+summary(lm(B1 ~ A1, data = du)) # wrong model
 
 
 # ~~ DAG 1B  -------------------------------------------------
