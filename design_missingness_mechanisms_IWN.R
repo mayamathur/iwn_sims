@@ -18,7 +18,8 @@ allPackages = c("here",
                 "testthat",
                 "Hmisc",
                 "stringr",
-                "Amelia")
+                "Amelia",
+                "mice")
 
 ( packagesNeeded = allPackages[ !( allPackages %in% installed.packages()[,"Package"] ) ] )
 if( length(packagesNeeded) > 0 ) install.packages(packagesNeeded)
@@ -101,6 +102,11 @@ du = sim_obj$du
 di_std = sim_obj$di_std
 di_ours = sim_obj$di_ours
 
+# correlation strengths
+cfact_cor(du)
+
+
+
 imps_am_std = amelia( as.data.frame(di_std),
                       m=p$imp_m,
                       p2s = 0 # don't print output
@@ -123,8 +129,6 @@ imps_cor(imps_am_std)
 # compare to underlying dataset
 cfact_cor(du)
 
-#**almost all of the correlation between C and D is preserved in the imputations! 
-
 
 ### Analysis models
 
@@ -136,23 +140,31 @@ fit_regression(form_string = "B ~ A + C * D",
                du = NULL,
                imps = imps_am_std)
 
-# logistic
-form_string = "I(B>0) ~ A + C * D"
-fit_regression(form_string = form_string,
-               model = "logistic",
-               coef_of_interest = "A",
+# # logistic
+# form_string = "I(B>0) ~ A + C * D"
+# fit_regression(form_string = form_string,
+#                model = "logistic",
+#                coef_of_interest = "A",
+#                miss_method = "MI",
+#                du = NULL,
+#                imps = imps_am_std)
+# 
+# summary( glm( eval( parse(text = "I(B1>0) ~ A1 + C1 * D1") ),
+#      data = du,
+#      family = binomial(link = "logit") ) )
+
+### Coefficient of C instead of A
+
+# OLS
+fit_regression(form_string = "B ~ A + C + D",
+               model = "OLS",
+               coef_of_interest = "C",
                miss_method = "MI",
                du = NULL,
                imps = imps_am_std)
 
-summary( glm( eval( parse(text = "I(B1>0) ~ A1 + C1 * D1") ),
-     data = du,
-     family = binomial(link = "logit") ) )
 
-# strength of confounding in general pop
-# I want these to differ wrt coef of A
-summary(lm(B1 ~ A1 + C1*D1, data = du))
-summary(lm(B1 ~ A1, data = du)) # wrong model
+
 
 
 # ~~ DAG 1B  -------------------------------------------------
