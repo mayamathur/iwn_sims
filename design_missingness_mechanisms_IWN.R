@@ -50,7 +50,7 @@ p = tidyr::expand_grid(
   imp_maxit = NA,
   mice_method = NA,
   
-  dag_name = c( "1J" ),
+  dag_name = c( "1K" ),
   N = c(5000)
 )
 
@@ -90,7 +90,18 @@ cor( du %>% select(A1, B1, D1, RB))
 colMeans(is.na(du))
 
 
+# ~~ DAG 1K  -------------------------------------------------
+# 2023-10-07 
 
+sim_obj = sim_data(.p = p)
+
+du = sim_obj$du
+di_std = sim_obj$di_std
+di_ours = sim_obj$di_ours
+
+# correlation strengths
+cfact_cor(du)
+cor(du$C1, du$RC)
 
 
 # ~~ DAG 1J  -------------------------------------------------
