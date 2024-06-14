@@ -125,12 +125,11 @@ if ( run.local == TRUE ) {
   scen.params = tidyr::expand_grid(
     
     #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    rep.methods = "gold ; MICE-std ; Am-std", 
+    rep.methods = "CC", 
     
     model = "OLS",
-    #coef_of_interest = "A:C",  # "(Intercept)" or "A"
     coef_of_interest = "A",
-    N = c(1000),
+    N = c(10000),
     
     # MICE parameters
     # as on cluster
@@ -144,7 +143,7 @@ if ( run.local == TRUE ) {
     # N = c(100),
     
     #dag_name = c( "1B", "1D", "1G", "1H" ),
-    dag_name = "1J"
+    dag_name = "1B"
   )
   
   

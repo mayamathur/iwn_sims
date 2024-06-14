@@ -32,40 +32,40 @@ lapply( allPackages,
 
 # SET SIMULATION PARAMETERS -----------------------------------------
 
-# ISOLATE SCENS
-scen.params = tidyr::expand_grid(
-
-  #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-  rep.methods = "gold ; MICE-std ; Am-std",
-
-  model = "OLS",
-  #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
-  coef_of_interest = c("A"),  # "(Intercept)" or "A"
-
-  imp_m = 50,
-  imp_maxit = 200,
-  mice_method = "norm",
-
-  dag_name = c( "1J" ),
-  N = c(1000)
-)
-
-# # FULL SIMS
+# # ISOLATE SCENS
 # scen.params = tidyr::expand_grid(
 # 
-#   rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-#   #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours",
+#   #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+#   rep.methods = "gold ; MICE-std ; Am-std",
 # 
 #   model = "OLS",
-#   coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+#   #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+#   coef_of_interest = c("A"),  # "(Intercept)" or "A"
 # 
 #   imp_m = 50,
 #   imp_maxit = 200,
 #   mice_method = "norm",
 # 
-#   dag_name = c( "1B", "1F", "1D", "1G", "1H" ),
+#   dag_name = c( "1J" ),
 #   N = c(1000)
 # )
+
+# FULL SIMS
+scen.params = tidyr::expand_grid(
+
+  rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+  #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours",
+
+  model = "OLS",
+  coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
+
+  imp_m = 50,
+  imp_maxit = 200,
+  mice_method = "norm",
+
+  dag_name = c( "1B", "1D", "1Fb" ),
+  N = c(1000)
+)
 
 # remove combos that aren't implemented
 scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H", "1F") &
@@ -129,10 +129,10 @@ n.files
 # run just the first one
 # sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/1.sbatch
 
-# xxx files
+# 120 files
 path = "/home/groups/manishad/IWN"
 setwd( paste(path, "/sbatch_files", sep="") )
-for (i in 1:20) {
+for (i in 2:120) {
   system( paste("sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/", i, ".sbatch", sep="") )
 }
 

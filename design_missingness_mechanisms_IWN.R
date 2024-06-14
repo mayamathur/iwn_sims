@@ -38,7 +38,7 @@ options(scipen=999)
 
 # PICK DAG TO GENERATE -----------------------------------------
 
-# most parameters don't matter, so set to NULL
+# most parameters don't matter
 p = tidyr::expand_grid(
   
   rep.methods = NA,
@@ -50,7 +50,7 @@ p = tidyr::expand_grid(
   imp_maxit = NA,
   mice_method = NA,
   
-  dag_name = c( "1K" ),
+  dag_name = c( "1B" ),
   N = c(5000)
 )
 
@@ -184,6 +184,9 @@ if (p$dag_name == "1B") {
   y_axis_vars = c("A1","B1","U1","U2")
   
   lp = l %>% filter(variable %in% y_axis_vars)
+  
+  ### Correlation matrix of counterfactuals and missingness indicators
+  cor( du %>% select(A1, B1, C1, RA) )
   
   #### Boxplots of each counterfactual variable by missingness status
   p = ggplot( data = lp,

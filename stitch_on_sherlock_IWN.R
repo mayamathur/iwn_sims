@@ -162,43 +162,43 @@ system(string)
 
 # MAKE AGG DATA ----------------------------------------------
 
-path = "/home/groups/manishad/IWN"
-setwd(path)
-source("helper_IWN.R")
-source("analyze_sims_helper_IWN.R")
-
-# if this says "problem with column OptimConverged", 
-#  you just need to comment out the optim columns in make_agg_data
-#  because you didn't run those methods
-agg = make_agg_data(s)
-
-setwd(.results.stitched.write.path)
-fwrite(agg, "agg.csv")
-
-
-table(agg$method)
-
-cat("\n\n nrow(agg) =", nrow(agg))
-cat("\n nuni(agg$scen.name) =", nuni(agg$scen.name) )
-
-# # OPTIONAL: shorter version of agg that's nicer to look at
-# agg.short = agg %>% select(prob.hacked, prob.conf, method, Mhat, MhatBias, MhatCover, MhatWidth,
-#                            #MhatEstFail, MhatCIFail,
-#                            sancheck.dp.k.nonaffirm.unhacked, sancheck.dp.k.nonaffirm.hacked) %>%
-#   filter( !( method %in% c("rtma-adj-pmed", "rtma-adj-pmean") ) ) %>%
-#   mutate_if(is.numeric, function(x) round(x,2))
-#   
+# path = "/home/groups/manishad/IWN"
+# setwd(path)
+# source("helper_IWN.R")
+# source("analyze_sims_helper_IWN.R")
+# 
+# # if this says "problem with column OptimConverged", 
+# #  you just need to comment out the optim columns in make_agg_data
+# #  because you didn't run those methods
+# agg = make_agg_data(s)
+# 
 # setwd(.results.stitched.write.path)
-# fwrite(agg.short, "agg_short.csv")
-
-
-
-
-# look again at failures
-t = agg %>% group_by(method) %>%
-  summarise( mean( is.na(bhat) ) )
-as.data.frame(t)
-
+# fwrite(agg, "agg.csv")
+# 
+# 
+# table(agg$method)
+# 
+# cat("\n\n nrow(agg) =", nrow(agg))
+# cat("\n nuni(agg$scen.name) =", nuni(agg$scen.name) )
+# 
+# # # OPTIONAL: shorter version of agg that's nicer to look at
+# # agg.short = agg %>% select(prob.hacked, prob.conf, method, Mhat, MhatBias, MhatCover, MhatWidth,
+# #                            #MhatEstFail, MhatCIFail,
+# #                            sancheck.dp.k.nonaffirm.unhacked, sancheck.dp.k.nonaffirm.hacked) %>%
+# #   filter( !( method %in% c("rtma-adj-pmed", "rtma-adj-pmean") ) ) %>%
+# #   mutate_if(is.numeric, function(x) round(x,2))
+# #   
+# # setwd(.results.stitched.write.path)
+# # fwrite(agg.short, "agg_short.csv")
+# 
+# 
+# 
+# 
+# # look again at failures
+# t = agg %>% group_by(method) %>%
+#   summarise( mean( is.na(bhat) ) )
+# as.data.frame(t)
+# 
 
 
 
