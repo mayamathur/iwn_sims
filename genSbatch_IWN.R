@@ -63,12 +63,12 @@ scen.params = tidyr::expand_grid(
   imp_maxit = 200,
   mice_method = "norm",
 
-  dag_name = c( "1B", "1D", "1Fb" ),
+  dag_name = c( "1B", "1D", "1Fb", "1J" ),
   N = c(1000)
 )
 
 # remove combos that aren't implemented
-scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H", "1F") &
+scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H", "1F", "1J") &
                                           coef_of_interest == "(Intercept)") )
 # add scen numbers
 start.at = 1

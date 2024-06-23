@@ -71,7 +71,6 @@ options(scipen=999)
 setwd(data.dir)
 aggo = read_excel("2024-06-13 agg.xlsx")
 
-#bm: decide how to present this to make it similar to Table 1 :)
 
 # TEMP
 .aggo = aggo

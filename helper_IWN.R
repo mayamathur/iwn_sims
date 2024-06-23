@@ -639,15 +639,10 @@ sim_data = function(.p) {
     
     
     ### SANDBOX
-
-    coefAB = 0
-    coefCD = 0.5
-    coef1 = 0.25
-    
     # still works - bias is about -0.10
-    # coefAB = 0
-    # coefCD = 1
-    # coef1 = 0.25
+    coefAB = 0
+    coefCD = 1
+    coef1 = 0.25
     
     du = du %>% rowwise() %>%
       mutate( D1 = rnorm( n = 1,  # second confounder
@@ -658,7 +653,7 @@ sim_data = function(.p) {
               
               B1 = rnorm( n = 1,
                           mean = coefAB*A1 + coef1*C1 + coef1*D1 ) )
-    ### END SAVED VERSION
+    ### END SANDBOX
     
     # ### SAVE - VERSION THAT WORKS BUT CONFOUNDING STRENGTHS QUITE STRONG
     # coefAB = 0
