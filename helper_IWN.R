@@ -1383,6 +1383,51 @@ res1 = function() {
 }
 
 
+
+make_agg_data = function(s) {
+  
+  correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
+  s$method = factor(s$method, levels = correct.order)
+  
+  # fill in beta (where it's NA) using gold-standard
+  beta_emp = s %>% filter(method == "gold") %>%
+    group_by(scen.name) %>%
+    summarise(beta = meanNA(bhat)) 
+  as.data.frame(beta_emp)
+  
+  s2 = s
+  
+  s2 = s2 %>% rowwise() %>%
+    mutate( beta = ifelse( !is.na(beta),
+                           beta,
+                           beta_emp$beta[ beta_emp$scen.name == scen.name ] ) )
+  
+  # sanity check
+  as.data.frame( s2 %>% group_by(dag_name, coef_of_interest) %>%
+                   summarise(beta[1]) )
+  # end of filling in beta
+  
+  
+  aggo = s2 %>% group_by(dag_name, coef_of_interest, method) %>%
+    summarise( 
+      reps = n(),
+      Bhat = meanNA(bhat),
+      BhatBias = meanNA(bhat - beta),
+      BhatLo = meanNA(bhat_lo),
+      BhatHi = meanNA(bhat_hi),
+      BhatFail = mean(is.na(bhat)),
+      BhatRMSE = sqrt( meanNA( (bhat - beta)^2 ) ),
+      BhatCover = meanNA( covers(truth = beta,
+                                 lo = bhat_lo,
+                                 hi = bhat_hi) ) ) %>%
+    arrange() %>%
+    mutate_if(is.numeric, function(x) round(x,2)) 
+  
+  return(aggo)
+  
+}
+
+
 wrangle_agg_data = function(.aggo) {
   
   agg = .aggo
@@ -1403,12 +1448,12 @@ wrangle_agg_data = function(.aggo) {
   agg$dag_name_pretty[ agg$dag_name == "1J" ] = "DAG (d)"
   
   agg$method_pretty = agg$method
-  agg$method_pretty[ agg$method == "gold" ] = "Benchmark"
-  agg$method_pretty[ agg$method == "CC" ] = "Complete-case"
-  agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
-  agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
-  agg$method_pretty[ agg$method == "MICE-std" ] = "MICE (standard)"
-  agg$method_pretty[ agg$method == "MICE-ours" ] = "MICE (m-backdoor)"
+  # agg$method_pretty[ agg$method == "gold" ] = "Benchmark"
+  # agg$method_pretty[ agg$method == "CC" ] = "Complete-case"
+  # agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
+  # agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
+  # agg$method_pretty[ agg$method == "MICE-std" ] = "MICE (standard)"
+  # agg$method_pretty[ agg$method == "MICE-ours" ] = "MICE (m-backdoor)"
   
   return(agg)
 }

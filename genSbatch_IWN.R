@@ -129,10 +129,10 @@ n.files
 # run just the first one
 # sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/1.sbatch
 
-# 140 files
+# 700 files
 path = "/home/groups/manishad/IWN"
 setwd( paste(path, "/sbatch_files", sep="") )
-for (i in 1:140) {
+for (i in 1:700) {
   system( paste("sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/", i, ".sbatch", sep="") )
 }
 

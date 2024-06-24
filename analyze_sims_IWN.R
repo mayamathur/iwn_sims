@@ -62,16 +62,13 @@ source("helper_IWN.R")
 # no sci notation
 options(scipen=999)
 
-# get simulation data
-# already aggregated by stitch_on_sherlock_IWN.R
+
+# read in dataset
+setwd(data.dir)
+agg = fread("agg.csv")
 
 
 # MAIN RESULTS TABLE ---------------------------------------------------------------
-
-setwd(data.dir)
-aggo = read_excel("2024-06-24 agg.xlsx")
-
-agg = wrangle_agg_data(.aggo = aggo)
 
 table(agg$method_pretty)
 
@@ -94,21 +91,6 @@ View(t)
 print( xtable(t), include.rownames = FALSE)
 
 
-# INVESTIGATE DAG (D) - FILE MATCHING ---------------------------------------------------------------
-
-# Q: Why does MICE have dramatically higher coverage than Amelia? Is its CI much wider?
-# A: Yes
-
-setwd(data.dir)
-s = fread("stitched.csv")
-
-
-s %>% filter(dag_name == "1J") %>%
-  group_by(method) %>%
-  summarise( mean(bhat_lo), 
-             mean(bhat_hi),
-             mean(bhat_width))
-
 
 # DESCRIPTIVES FOR EACH DAG ---------------------------------------------------------------
 
@@ -116,8 +98,8 @@ s %>% filter(dag_name == "1J") %>%
 
 # ~ Simulate Dataset ------------------------------
 
-# pick DAG name: 1B, 1D, 1Fb
-.dag_name = "1B"
+# pick DAG name: 1B, 1D, 1Fb, 1J
+.dag_name = "1J"
 
 
 # we just want one dataset; using NAs for sim params that don't matter in this context
@@ -147,6 +129,7 @@ du = sim_obj$du
 if ( .dag_name == "1B" ) keepers = c("A1", "B1", "C1", "RA") 
 if ( .dag_name == "1D" ) keepers = c("A1", "B1", "C1", "RA", "RB")
 if ( .dag_name == "1Fb" ) keepers = c("A1", "B1", "D1", "RB")
+if ( .dag_name == "1J" ) keepers = c("A1", "B1", "C1", "D1", "RC", "RD")
 
 cormat = cor( du %>% select( all_of(keepers) ) )
 
@@ -172,13 +155,41 @@ if ("RB" %in% names(du)) {
   
 }
 
+if (.dag_name == "1J"){
+  
+  # note: in stats_for_paper, nodes are relabeled to match paper rather than code
+  update_result_csv(name = paste( "DAG ", .dag_name, " mean RD", sep = "" ),
+                    value = round( mean(du$RC), 2) )
+  
+  update_result_csv(name = paste( "DAG ", .dag_name, " mean RE", sep = "" ),
+                    value = round( mean(du$RD), 2) )
+  
+  
+}
 
 
 
 
+# INVESTIGATE DAG (D) - FILE MATCHING ---------------------------------------------------------------
+
+### Q: Why does MICE have dramatically higher coverage than Amelia? Is its CI much wider?
+# A: Yes.
+
+s %>% filter(dag_name == "1J") %>%
+  group_by(method) %>%
+  summarise( mean(bhat_lo), 
+             mean(bhat_hi),
+             mean(bhat_width))
+
+### Q: Do Amelia and MICE produce any errors/warnings?
+# A: No.
+
+temp = s %>% filter(dag_name == "1J" & method == "Am-std")
+table( temp$overall.error )
 
 
-
+temp = s %>% filter(dag_name == "1J" & method == "MICE-std")
+table( temp$overall.error )
 
 
 
