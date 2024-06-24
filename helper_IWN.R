@@ -1383,6 +1383,36 @@ res1 = function() {
 }
 
 
+wrangle_agg_data = function(.aggo) {
+  
+  agg = .aggo
+  
+  # recode variables
+  agg$coef_of_interest_pretty = agg$coef_of_interest
+  agg$coef_of_interest_pretty[ agg$dag_name %in% c("1B", "1D") & agg$coef_of_interest == "(Intercept)"] = "E[A]"
+  agg$coef_of_interest_pretty[ agg$dag_name %in% c("1Fb") & agg$coef_of_interest == "(Intercept)"] = "E[B]" 
+  agg$coef_of_interest_pretty[ agg$coef_of_interest == "A"] = "E[B | A]" 
+  # check it
+  agg %>% group_by(dag_name, coef_of_interest) %>% 
+    summarise(unique(coef_of_interest_pretty))
+  
+  agg$dag_name_pretty = agg$dag_name
+  agg$dag_name_pretty[ agg$dag_name == "1B" ] = "DAG (a)"
+  agg$dag_name_pretty[ agg$dag_name == "1D" ] = "DAG (b)"
+  agg$dag_name_pretty[ agg$dag_name == "1Fb" ] = "DAG (c)"
+  agg$dag_name_pretty[ agg$dag_name == "1J" ] = "DAG (d)"
+  
+  agg$method_pretty = agg$method
+  agg$method_pretty[ agg$method == "gold" ] = "Benchmark"
+  agg$method_pretty[ agg$method == "CC" ] = "Complete-case"
+  agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
+  agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
+  agg$method_pretty[ agg$method == "MICE-std" ] = "MICE (standard)"
+  agg$method_pretty[ agg$method == "MICE-ours" ] = "MICE (m-backdoor)"
+  
+  return(agg)
+}
+
 
 # INPUT/OUTPUT FNS ----------------------------------------------
 

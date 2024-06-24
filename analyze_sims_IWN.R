@@ -44,7 +44,7 @@ for (pkg in to.load) {
 code.dir = here()
 
 data.dir = str_replace_all( string = here(),
-                   replacement = "Simulation results/2024-06-13 - rerun 1B, 1D, 1Fb",
+                   replacement = "Simulation results/Working results",
                    pattern = "Simulation code" ) 
 
 results.dir = str_replace_all( string = here(),
@@ -66,44 +66,10 @@ options(scipen=999)
 # already aggregated by stitch_on_sherlock_IWN.R
 
 
-# ANALYZE SIMS ---------------------------------------------------------------
+# MAIN RESULTS TABLE ---------------------------------------------------------------
 
 setwd(data.dir)
-aggo = read_excel("2024-06-13 agg.xlsx")
-
-
-# TEMP
-.aggo = aggo
-
-
-wrangle_agg_data = function(.aggo) {
-  
-  agg = .aggo
-  
-  # recode variables
-  agg$coef_of_interest_pretty = agg$coef_of_interest
-  agg$coef_of_interest_pretty[ agg$dag_name %in% c("1B", "1D") & agg$coef_of_interest == "(Intercept)"] = "E[A]"
-  agg$coef_of_interest_pretty[ agg$dag_name %in% c("1Fb") & agg$coef_of_interest == "(Intercept)"] = "E[B]" 
-  agg$coef_of_interest_pretty[ agg$coef_of_interest == "A"] = "E[B | A]" 
-  # check it
-  agg %>% group_by(dag_name, coef_of_interest) %>% 
-    summarise(unique(coef_of_interest_pretty))
-  
-  agg$dag_name_pretty = agg$dag_name
-  agg$dag_name_pretty[ agg$dag_name == "1B" ] = "DAG (a)"
-  agg$dag_name_pretty[ agg$dag_name == "1D" ] = "DAG (b)"
-  agg$dag_name_pretty[ agg$dag_name == "1Fb" ] = "DAG (c)"
-  
-  agg$method_pretty = agg$method
-  agg$method_pretty[ agg$method == "gold" ] = "Benchmark"
-  agg$method_pretty[ agg$method == "CC" ] = "Complete-case"
-  agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
-  agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
-  agg$method_pretty[ agg$method == "MICE-std" ] = "MICE (standard)"
-  agg$method_pretty[ agg$method == "MICE-ours" ] = "MICE (m-backdoor)"
-  
-  return(agg)
-}
+aggo = read_excel("2024-06-24 agg.xlsx")
 
 agg = wrangle_agg_data(.aggo = aggo)
 
@@ -128,7 +94,20 @@ View(t)
 print( xtable(t), include.rownames = FALSE)
 
 
+# INVESTIGATE DAG (D) - FILE MATCHING ---------------------------------------------------------------
 
+# Q: Why does MICE have dramatically higher coverage than Amelia? Is its CI much wider?
+# A: Yes
+
+setwd(data.dir)
+s = fread("stitched.csv")
+
+
+s %>% filter(dag_name == "1J") %>%
+  group_by(method) %>%
+  summarise( mean(bhat_lo), 
+             mean(bhat_hi),
+             mean(bhat_width))
 
 
 # DESCRIPTIVES FOR EACH DAG ---------------------------------------------------------------

@@ -145,7 +145,7 @@ as.data.frame(t)
 path = "/home/groups/manishad/IWN/overall_stitched"
 setwd(path)
 write.xlsx(as.data.frame(t),
-           paste(Sys.Date(), "temp_agg.xlsx") )
+           paste(Sys.Date(), "agg.xlsx") )
 
 
 # ~ Write stitched.csv ---------------------------
