@@ -1,4 +1,5 @@
 
+# rm(list=ls())
 
 # PRELIMINARIES ---------------------------------------------------------------
 
@@ -66,6 +67,8 @@ options(scipen=999)
 # read in dataset
 setwd(data.dir)
 agg = fread("agg.csv")
+# check when it was created
+file.info("agg.csv")$ctime
 
 
 # MAIN RESULTS TABLE ---------------------------------------------------------------

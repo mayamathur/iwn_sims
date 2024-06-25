@@ -1,4 +1,5 @@
 
+# rm(list=ls())
 
 # PRELIMINARIES ---------------------------------------------------------------
 
@@ -69,7 +70,8 @@ options(scipen=999)
 # read in datasets
 setwd(data.dir)
 s = fread("stitched.csv")
-
+# check when it was created
+file.info("stitched.csv")$ctime
 
 
 # SANTY CHECKS ---------------------------------------------------------------
@@ -84,11 +86,19 @@ temp = s %>% filter(overall.error == "0 (non-NA) cases")
 as.data.frame( temp %>% group_by(dag_name, coef_of_interest, method) %>%
   summarise(n()) )
 
+# check reps per scenario
+t = s %>% group_by(scen.name, method) %>%
+  summarise( n() )
+table(t$`n()`)
+
+
 
 # MAKE AGG DATA ---------------------------------------------------------------
 
 aggo = make_agg_data(s)
 agg = wrangle_agg_data(.aggo = aggo)
+
+table(agg$method_pretty)
 
 setwd(data.dir)
 fwrite(agg, "agg.csv")

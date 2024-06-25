@@ -22,25 +22,6 @@ sim_data = function(.p) {
     
     coef1 = 2
     
-    # # standard version - SAVE
-    # du = du %>% rowwise() %>%
-    #   mutate( A1 = rnorm( n = 1,
-    #                       mean = coef1*U1 ),
-    #           
-    #           B1 = rnorm( n = 1,
-    #                       #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
-    #                       mean = coef1*U1 + coef1*U2 ),
-    #           
-    #           RA = rbinom( n = 1,
-    #                        prob = expit(1*U2),
-    #                        size = 1 ),
-    #           
-    #           A = ifelse(RA == 0, NA, A1),
-    #           B = B1,
-    #           C = C1)
-    
-    
-    # 2023-08-22 experiments - stronger correlations
     du = du %>% rowwise() %>%
       mutate( A1 = rnorm( n = 1,
                           mean = coef1*U1 ),
@@ -56,28 +37,6 @@ sim_data = function(.p) {
               A = ifelse(RA == 0, NA, A1),
               B = B1,
               C = C1)
-    
-    # # 2023-08-23 - more experiments
-    # # SAVE - this should make CC biased (U1*U2 interaction)
-    # du = du %>% rowwise() %>%
-    #   mutate( A1 = rnorm( n = 1,
-    #                       mean = coef1*U1 ),
-    #           
-    #           B1 = rnorm( n = 1,
-    #                       #mean = coef1*A1 + coef1*U1 + coef1*U2 ), #@TEMP ONLY 2023-08-22
-    #                       mean = 3*U1 + 3*U2 + U1*U2 ),
-    #           
-    #           RA = rbinom( n = 1,
-    #                        prob = expit(3*U2),
-    #                        size = 1 ),
-    #           
-    #           A = ifelse(RA == 0, NA, A1),
-    #           B = B1,
-    #           C = C1)
-    
-    
-    # cor(du %>% select(A1, B1, C1))
-    #cor(du$RA, du$B1)
     
     # make dataset for imputation (standard way: all measured variables)
     di_std = du %>% select(B, C, A)
@@ -351,31 +310,7 @@ sim_data = function(.p) {
     
     #coef1 = 2 # as in 2023-08-21 sims, where MICE unexpected performed badly
     coef1 = 1
-    
-    # du = du %>% rowwise() %>%
-    #   mutate( A1 = rnorm( n = 1,
-    #                       mean = coef1*U1 ),
-    #           
-    #           D1 = rnorm( n = 1,
-    #                       mean = coef1*U1 + coef1*U2 ),
-    #           
-    #           B1 = rnorm( n = 1,
-    #                       mean = coef1*A1 ),
-    #           
-    #           C1 = rnorm( n = 1,
-    #                       mean = (coef1/2)*B1 ),
-    #           
-    #           RA = rbinom( n = 1,
-    #                        prob = expit(1*C1 + 1*U2),
-    #                        size = 1 ),
-    #           RB = rbinom( n = 1,
-    #                        prob = 1, # NOT MISSING to avoid unblockable m-bd path
-    #                        size = 1 ),
-    #           
-    #           A = ifelse(RA == 0, NA, A1),
-    #           B = ifelse(RB == 0, NA, B1),
-    #           C = C1,
-    #           D = D1)
+
     
     # 2023-08-23 - experiments
     du = du %>% rowwise() %>%
@@ -510,7 +445,6 @@ sim_data = function(.p) {
                      U2 = rnorm( n = .p$N ),
                      A1 = rnorm( n = .p$N ) )
     
-    #coef1 = 2 # as in 2023-08-21 sims, where MICE unexpectedly performed badly
     coef1 = 1.5
     
     du = du %>% rowwise() %>%
@@ -637,9 +571,6 @@ sim_data = function(.p) {
     
     du = data.frame( C1 = rnorm( n = .p$N ) )
     
-    
-    ### SANDBOX
-    # still works - bias is about -0.10
     coefAB = 0
     coefCD = 1
     coef1 = 0.25
@@ -653,25 +584,7 @@ sim_data = function(.p) {
               
               B1 = rnorm( n = 1,
                           mean = coefAB*A1 + coef1*C1 + coef1*D1 ) )
-    ### END SANDBOX
-    
-    # ### SAVE - VERSION THAT WORKS BUT CONFOUNDING STRENGTHS QUITE STRONG
-    # coefAB = 0
-    # coefCD = 2
-    # coef1 = 0.5
-    # 
-    # du = du %>% rowwise() %>%
-    #   mutate( D1 = rnorm( n = 1,  # second confounder
-    #                       mean = coefCD*C1 ),  # associated with C1
-    #   
-    #           A1 = rnorm( n = 1,
-    #                       mean = coef1*C1 + coef1*D1 ),
-    #           
-    #           B1 = rnorm( n = 1,
-    #                       mean = coefAB*A1 + coef1*C1 + coef1*D1 ) )
-    # ### END SAVED VERSION
 
- 
     # for file-matching, need to impose missingness a little differently
     # randomly assign each row to a pattern
     patterns = c(1,2)
@@ -1447,13 +1360,13 @@ wrangle_agg_data = function(.aggo) {
   agg$dag_name_pretty[ agg$dag_name == "1Fb" ] = "DAG (c)"
   agg$dag_name_pretty[ agg$dag_name == "1J" ] = "DAG (d)"
   
-  agg$method_pretty = agg$method
-  # agg$method_pretty[ agg$method == "gold" ] = "Benchmark"
-  # agg$method_pretty[ agg$method == "CC" ] = "Complete-case"
-  # agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
-  # agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
-  # agg$method_pretty[ agg$method == "MICE-std" ] = "MICE (standard)"
-  # agg$method_pretty[ agg$method == "MICE-ours" ] = "MICE (m-backdoor)"
+  agg$method_pretty = as.character(agg$method)
+  agg$method_pretty[ agg$method == "gold" ] = "Benchmark"
+  agg$method_pretty[ agg$method == "CC" ] = "Complete-case"
+  agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
+  agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
+  agg$method_pretty[ agg$method == "MICE-std" ] = "MICE (standard)"
+  agg$method_pretty[ agg$method == "MICE-ours" ] = "MICE (m-backdoor)"
   
   return(agg)
 }

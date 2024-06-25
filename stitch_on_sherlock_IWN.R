@@ -224,7 +224,7 @@ source("analyze_sims_helper_IWN.R")
 missed.nums = sbatch_not_run( "/home/groups/manishad/IWN/long_results",
                               "/home/groups/manishad/IWN/long_results",
                               .name.prefix = "long",
-                              .max.sbatch.num = 108)
+                              .max.sbatch.num = 700)
 
 # run any missed jobs
 setwd( paste(path, "/sbatch_files", sep="") )

@@ -91,8 +91,9 @@ write.csv( scen.params, "scen_params.csv", row.names = FALSE )
 source("helper_IWN.R")
 
 # number of sbatches to generate (i.e., iterations within each scenario)
-n.reps.per.scen = 5000
-n.reps.in.doParallel = 50
+# FOR SOME REASON, THIS ULTIMATELY RUNS 1000 REPS RATHER THAN 5000. FIX AND ADJUST IF RE-RUNNING.
+n.reps.per.scen = 10000
+n.reps.in.doParallel = 100
 ( n.files = ( n.reps.per.scen / n.reps.in.doParallel ) * n.scen )
 
 
@@ -108,7 +109,7 @@ runfile_path = paste(path, "/testRunFile.R", sep="")
 sbatch_params <- data.frame(jobname,
                             outfile,
                             errorfile,
-                            jobtime = "00:30:00", 
+                            jobtime = "01:00:00", 
                             quality = "normal",
                             node_number = 1,
                             mem_per_node = 64000,
@@ -150,7 +151,7 @@ source("helper_IWN.R")
 missed.nums = sbatch_not_run( "/home/groups/manishad/IWN/long_results",
                               "/home/groups/manishad/IWN/long_results",
                               .name.prefix = "long_results",
-                              .max.sbatch.num = 45 )
+                              .max.sbatch.num = 700 )
 
 
 
