@@ -1,6 +1,0 @@
-job.name,scen.name,rep.name,rep.methods,model,imp_m,imp_maxit,beta,dag_name,N,method,bhat,bhat_lo,bhat_hi,bhat_width,overall.error,bhat_covers,form_string,gold_form_string,pR_emp
-job_1,1,1,gold ; MICE-std ; Am-std ; MICE-ours ; Am-ours,OLS,50,100,0,1B,4000,gold,-0.00306956555693611,-0.0475443871614969,0.0414052560476247,0.0889496432091216,,1,A ~ 1,A1 ~ 1,0.49925
-job_1,1,1,gold ; MICE-std ; Am-std ; MICE-ours ; Am-ours,OLS,50,100,0,1B,4000,MICE-std,-0.128729886070537,-0.187918018414375,-0.0695417537266998,0.118376264687675,,0,A ~ 1,A1 ~ 1,0.49925
-job_1,1,1,gold ; MICE-std ; Am-std ; MICE-ours ; Am-ours,OLS,50,100,0,1B,4000,MICE-ours,0.047893170505288,-0.053788719452754,0.14957506046333,0.203363779916084,,1,A ~ 1,A1 ~ 1,0.49925
-job_1,1,1,gold ; MICE-std ; Am-std ; MICE-ours ; Am-ours,OLS,50,100,0,1B,4000,Am-std,-0.132482930222849,-0.19625613235014,-0.0687097280955574,0.127546404254583,,0,A ~ 1,A1 ~ 1,0.49925
-job_1,1,1,gold ; MICE-std ; Am-std ; MICE-ours ; Am-ours,OLS,50,100,0,1B,4000,Am-ours,0.027465250630772,-0.0314004519800932,0.0863309532416373,0.117731405221731,,1,A ~ 1,A1 ~ 1,0.49925

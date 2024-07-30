@@ -45,13 +45,24 @@ for (pkg in to.load) {
 code.dir = here()
 
 data.dir = str_replace_all( string = here(),
-                   replacement = "Simulation results/Working results",
-                   pattern = "Simulation code" ) 
+                            replacement = "Simulation results/Working results",
+                            pattern = "Simulation code" ) 
 
 results.dir = str_replace_all( string = here(),
                                replacement = "Simulation results/Working results",
                                pattern = "Simulation code" ) 
 setwd(results.dir)  # check it
+
+# # generic dirs (save)
+# data.dir = str_replace_all( string = here(),
+#                    replacement = "Simulation results/Working results",
+#                    pattern = "Simulation code" ) 
+# 
+# results.dir = str_replace_all( string = here(),
+#                                replacement = "Simulation results/Working results",
+#                                pattern = "Simulation code" ) 
+# setwd(results.dir)  # check it
+
 
 overleaf.dir.stats = "/Users/mmathur/Dropbox/Apps/Overleaf/IWN: Imputation without nightMARs (Overleaf)/R_objects"
 setwd(overleaf.dir.stats)  # check it
