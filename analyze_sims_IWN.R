@@ -45,13 +45,14 @@ for (pkg in to.load) {
 code.dir = here()
 
 data.dir = str_replace_all( string = here(),
-                            replacement = "Simulation results/Working results",
-                            pattern = "Simulation code" ) 
+                            replacement = "Results/2024-07-30 - as in first journal submission",
+                            pattern = "Code" ) 
 
 results.dir = str_replace_all( string = here(),
-                               replacement = "Simulation results/Working results",
-                               pattern = "Simulation code" ) 
+                               replacement = "Results/2024-07-30 - as in first journal submission",
+                               pattern = "Code" ) 
 setwd(results.dir)  # check it
+
 
 # # generic dirs (save)
 # data.dir = str_replace_all( string = here(),
@@ -63,7 +64,11 @@ setwd(results.dir)  # check it
 #                                pattern = "Simulation code" ) 
 # setwd(results.dir)  # check it
 
-
+# below is the only absolute path
+# write results directly to directory containing TeX manuscript in Overleaf so stats can be piped directly into text
+# this is an absolute path because it must live in Dropbox, outside the project directory, in order to sync with Overleaf
+# to reproduce results, just set this to any directory on your local machine
+# results will be written to a csv file in that location
 overleaf.dir.stats = "/Users/mmathur/Dropbox/Apps/Overleaf/IWN: Imputation without nightMARs (Overleaf)/R_objects"
 setwd(overleaf.dir.stats)  # check it
 
