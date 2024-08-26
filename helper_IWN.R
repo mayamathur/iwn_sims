@@ -592,10 +592,10 @@ sim_data = function(.p) {
     
     du = du %>% rowwise %>%
       mutate( RA = rbinom( n = 1,
-                      prob = 1, 
+                      prob = 1,  # A is never missing 
                       size = 1 ),
               RB = rbinom( n = 1,
-                      prob = 1, 
+                      prob = 1, # B is never missing
                       size = 1 ),
               
               # observed only for pattern 1
