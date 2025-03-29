@@ -1038,24 +1038,41 @@ mice.impute.pmm.cc <- function(y, ry, x, wy = NULL, donors = 5L,
   return(y[ry][idx])
 }
 
-# # example:
-# data(nhanes)
-# df <- nhanes
-# 
-# # Set up method and predictor matrix
-# ini <- mice(df, maxit = 0)
-# methods <- ini$method
-# pred <- ini$predictorMatrix
-# 
-# # Replace imputation method with custom pmm.cc
-# methods[methods == "pmm"] <- "pmm.cc"
-# 
-# # Run imputation
-# imp <- mice(df, method = methods, predictorMatrix = pred, m = 5, maxit = 5, print = FALSE)
-# 
-# # View imputed datasets
-# completed <- complete(imp, action = "long")
-# completed
+# Custom normal-model imputation that fits only on complete cases of x and y
+mice.impute.norm.cc <- function(y, ry, x, wy = NULL, ...) {
+  
+  if (is.null(wy)) wy <- !ry
+  x <- cbind(1, as.matrix(x))
+  
+  #### MM EDIT: Restrict model-fitting to complete cases
+  cc_rows <- complete.cases( cbind(x, y) )  # or more defensively: x & y[ry]
+  parm <- .norm.draw(y[cc_rows], ry[cc_rows], x[cc_rows, , drop = FALSE], ...)
+  # c.f. original version:
+  #  parm <- .norm.draw(y, ry, x, ...)
+  #### END MM EDIT
+
+  x[wy, ] %*% parm$beta + rnorm(sum(wy)) * parm$sigma
+  
+}
+
+# example:
+data(nhanes)
+df <- nhanes
+
+# Set up method and predictor matrix
+ini <- mice(df, maxit = 0)
+methods <- ini$method
+pred <- ini$predictorMatrix
+
+# Replace imputation method with custom pmm.cc
+methods[methods == "pmm"] <- "norm.cc"
+
+# Run imputation
+imp <- mice(df, method = methods, predictorMatrix = pred, m = 5, maxit = 5, print = FALSE)
+
+# View imputed datasets
+completed <- complete(imp, action = "long")
+completed
 
 
 # SMALL GENERIC HELPERS ---------------------
