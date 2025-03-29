@@ -959,6 +959,105 @@ imps_cor = function(.imps){
 }
 
 
+# CUSOTM MICE METHOD: TRAIN IMPUTATION MODEL ONLY ON COMPLETE CASES  -------------------------------------------------
+
+# function is verbatim from mice.impute.pmm.R except where o.w. noted:
+# https://github.com/amices/mice/blob/master/R/mice.impute.pmm.R?utm_source=chatgpt.com
+
+# Custom PMM that fits only on complete cases of x and y
+mice.impute.pmm.cc <- function(y, ry, x, wy = NULL, donors = 5L,
+                            matchtype = 1L, exclude = NULL,
+                            quantify = TRUE, trim = 1L,
+                            ridge = 1e-05, use.matcher = FALSE, ...) {
+  if (is.null(wy)) {
+    wy <- !ry
+  }
+  
+  # Reformulate the imputation problem such that
+  # 1. the imputation model disregards records with excluded y-values
+  # 2. the donor set does not contain excluded y-values
+  
+  # Keep sparse categories out of the imputation model
+  if (is.factor(y)) {
+    active <- !ry | y %in% (levels(y)[table(y) >= trim])
+    y <- y[active]
+    ry <- ry[active]
+    x <- x[active, , drop = FALSE]
+    wy <- wy[active]
+  }
+  # Keep excluded values out of the imputation model
+  if (!is.null(exclude)) {
+    active <- !ry | !y %in% exclude
+    y <- y[active]
+    ry <- ry[active]
+    x <- x[active, , drop = FALSE]
+    wy <- wy[active]
+  }
+  
+  x <- cbind(1, as.matrix(x))
+  
+  # quantify categories for factors
+  ynum <- y
+  if (is.factor(y)) {
+    if (quantify) {
+      ynum <- quantify(y, ry, x)
+    } else {
+      ynum <- as.integer(y)
+    }
+  }
+  
+  # parameter estimation
+  #### MM EDIT: Restrict model-fitting to complete cases
+  cc_rows <- complete.cases( cbind(x, ynum) )  # or more defensively: x & y[ry]
+  parm <- .norm.draw( ynum[cc_rows],
+                      rep(TRUE, sum(cc_rows)),
+                      x[cc_rows, , drop = FALSE],
+                      ridge = ridge, ... )
+  # c.f. original version:
+  #parm <- .norm.draw(ynum, ry, x, ridge = ridge, ...)
+  #### END MM EDIT
+
+  if (matchtype == 0L) {
+    yhatobs <- x[ry, , drop = FALSE] %*% parm$coef
+    yhatmis <- x[wy, , drop = FALSE] %*% parm$coef
+  }
+  if (matchtype == 1L) {
+    yhatobs <- x[ry, , drop = FALSE] %*% parm$coef
+    yhatmis <- x[wy, , drop = FALSE] %*% parm$beta
+  }
+  if (matchtype == 2L) {
+    yhatobs <- x[ry, , drop = FALSE] %*% parm$beta
+    yhatmis <- x[wy, , drop = FALSE] %*% parm$beta
+  }
+  if (use.matcher) {
+    idx <- matcher(yhatobs, yhatmis, k = donors)
+  } else {
+    idx <- matchindex(yhatobs, yhatmis, donors)
+  }
+  
+  return(y[ry][idx])
+}
+
+# # example:
+# data(nhanes)
+# df <- nhanes
+# 
+# # Set up method and predictor matrix
+# ini <- mice(df, maxit = 0)
+# methods <- ini$method
+# pred <- ini$predictorMatrix
+# 
+# # Replace imputation method with custom pmm.cc
+# methods[methods == "pmm"] <- "pmm.cc"
+# 
+# # Run imputation
+# imp <- mice(df, method = methods, predictorMatrix = pred, m = 5, maxit = 5, print = FALSE)
+# 
+# # View imputed datasets
+# completed <- complete(imp, action = "long")
+# completed
+
+
 # SMALL GENERIC HELPERS ---------------------
 
 # quickly look at results when running doParallel locally
