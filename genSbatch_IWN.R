@@ -15,7 +15,7 @@ allPackages = c("here",
                 "tidyr",
                 "tibble",
                 "testthat",
-                "Hmisc",
+                #"Hmisc",
                 "stringr")
 
 ( packagesNeeded = allPackages[ !( allPackages %in% installed.packages()[,"Package"] ) ] )
@@ -53,15 +53,15 @@ lapply( allPackages,
 # FULL SIMS
 scen.params = tidyr::expand_grid(
 
-  rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-  #rep.methods = "gold ; CC ; MICE-ours-pred ; Am-ours",
+  #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
+  rep.methods = "gold ; CC ; MICE-std ; MICE-ours",
 
   model = "OLS",
   coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
 
   imp_m = 50,
   imp_maxit = 200,
-  mice_method = "norm",
+  mice_method = c("norm.cc", "norm"),
 
   dag_name = c( "1B", "1D", "1Fb", "1J" ),
   N = c(1000)
@@ -91,8 +91,7 @@ write.csv( scen.params, "scen_params.csv", row.names = FALSE )
 source("helper_IWN.R")
 
 # number of sbatches to generate (i.e., iterations within each scenario)
-# FOR SOME REASON, THIS ULTIMATELY RUNS 1000 REPS RATHER THAN 5000. FIX AND ADJUST IF RE-RUNNING.
-n.reps.per.scen = 10000
+n.reps.per.scen = 5000
 n.reps.in.doParallel = 100
 ( n.files = ( n.reps.per.scen / n.reps.in.doParallel ) * n.scen )
 

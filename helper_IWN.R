@@ -12,7 +12,7 @@ sim_data = function(.p) {
   
   if (.p$model != "OLS" ) stop("Only handles model OLS for now")
   
-  # ~ DAG 1B -----------------------------
+  # ~ DAG 1B (= DAG (a) in paper) -----------------------------
   # RA-A collider
   
   if ( .p$dag_name == "1B" ) {
@@ -79,7 +79,7 @@ sim_data = function(.p) {
   }  # end of .p$dag_name == "1B"
   
   
-  # ~ DAG 1D -----------------------------
+  # ~ DAG 1D (= DAG (b) in paper) -----------------------------
   # similar to 1B, but now B has its own missingness, so restricting
   #  the dataset to exclude it from imputation doesn't work
   
@@ -435,9 +435,9 @@ sim_data = function(.p) {
   
   
   
-  # ~ DAG 1Fb (Type-D) -----------------------------
+  # ~ DAG 1Fb (= DAG (c) in paper) -----------------------------
   # Ilya's suggestion
-  
+  # Type-D
 
   if ( .p$dag_name == "1Fb" ) {
     
@@ -565,8 +565,9 @@ sim_data = function(.p) {
   }  # end of .p$dag_name == "1H"
   
   
-  # ~ DAG 1J (file-matching on 2 confounders) -----------------------------
+  # ~ DAG 1J (= DAG (d) in paper; only in supplement) -----------------------------
   
+  # file-matching on 2 confounders
   if ( .p$dag_name == "1J" ) {
     
     du = data.frame( C1 = rnorm( n = .p$N ) )
@@ -1055,24 +1056,24 @@ mice.impute.norm.cc <- function(y, ry, x, wy = NULL, ...) {
   
 }
 
-# example:
-data(nhanes)
-df <- nhanes
-
-# Set up method and predictor matrix
-ini <- mice(df, maxit = 0)
-methods <- ini$method
-pred <- ini$predictorMatrix
-
-# Replace imputation method with custom pmm.cc
-methods[methods == "pmm"] <- "norm.cc"
-
-# Run imputation
-imp <- mice(df, method = methods, predictorMatrix = pred, m = 5, maxit = 5, print = FALSE)
-
-# View imputed datasets
-completed <- complete(imp, action = "long")
-completed
+# # example:
+# data(nhanes)
+# df <- nhanes
+# 
+# # Set up method and predictor matrix
+# ini <- mice(df, maxit = 0)
+# methods <- ini$method
+# pred <- ini$predictorMatrix
+# 
+# # Replace imputation method with custom pmm.cc
+# methods[methods == "pmm"] <- "norm.cc"
+# 
+# # Run imputation
+# imp <- mice(df, method = methods, predictorMatrix = pred, m = 5, maxit = 5, print = FALSE)
+# 
+# # View imputed datasets
+# completed <- complete(imp, action = "long")
+# completed
 
 
 # SMALL GENERIC HELPERS ---------------------
@@ -1184,7 +1185,7 @@ sbatch_skeleton <- function() {
 #now run normal batch commands
 
 ml load v8
-ml load R/4.2.0
+ml load R/4.3.2
 R -f PATH_TO_R_SCRIPT ARGS_TO_R_SCRIPT")
 }
 

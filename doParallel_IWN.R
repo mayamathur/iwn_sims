@@ -32,7 +32,7 @@ toLoad = c("crayon",
            "tidyr",
            "tibble",
            "testthat",
-           "Hmisc",
+           #"Hmisc",
            "stringr",
            "mice",
            "Amelia",
@@ -125,7 +125,7 @@ if ( run.local == TRUE ) {
   scen.params = tidyr::expand_grid(
     
     #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    rep.methods = "CC", 
+    rep.methods = "gold ; MICE-std ; MICE-ours", 
     
     model = "OLS",
     coef_of_interest = "A",
@@ -135,7 +135,7 @@ if ( run.local == TRUE ) {
     # as on cluster
     imp_m = 5,  # CURRENTLY SET LOW
     imp_maxit = 100,
-    mice_method = "norm",
+    mice_method = "norm", # custom method to train only on CCs
     
     # # for quicker sims
     # imp_m = 5,

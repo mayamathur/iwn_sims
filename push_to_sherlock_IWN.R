@@ -34,7 +34,7 @@ nano /home/groups/manishad/IWN/sim_results/overall_stitched/sti*
 # CODE -> SHERLOCK ----------------------------------
 
 # push all Sherlock code
-scp /Users/mmathur/Dropbox/Personal\ computer/Independent\ studies/2023/\*IWN\ \(Imputation\ without\ nightMARs\)/Simulation\ code/* mmathur@login.sherlock.stanford.edu:/home/groups/manishad/IWN
+scp /Users/mmathur/Dropbox/Personal\ computer/Independent\ studies/2023/\*IWN\ \(Imputation\ without\ nightMARs\)/Linked\ to\ OSF\ \(IWN\)/Simulation\ study/Code/* mmathur@login.sherlock.stanford.edu:/home/groups/manishad/IWN
 
 
 
@@ -81,7 +81,7 @@ rsync -a --delete /home/groups/manishad/IWN/empty_dir/ /home/groups/manishad/IWN
   
   # delete "rm" files
   rm /home/users/mmathur/rm_*
-  rm /home/groups/manishad/IWN/sbatch_files/rm_*
+  rm /home/groups/manishad/IWN/rmfiles/rm_*
   
   
   # DELETE ALL SBATCHES
