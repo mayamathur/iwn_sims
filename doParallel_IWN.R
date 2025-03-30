@@ -125,11 +125,11 @@ if ( run.local == TRUE ) {
   scen.params = tidyr::expand_grid(
     
     #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    rep.methods = "gold ; MICE-std ; MICE-ours", 
+    rep.methods = "gold ; MVN-CC-std ; MVN-CC-ours ; Am-std ; Am-ours", 
     
     model = "OLS",
-    coef_of_interest = "A",
-    N = c(10000),
+    coef_of_interest = "(Intercept)",
+    N = c(1000),
     
     # MICE parameters
     # as on cluster
@@ -143,7 +143,7 @@ if ( run.local == TRUE ) {
     # N = c(100),
     
     #dag_name = c( "1B", "1D", "1G", "1H" ),
-    dag_name = "1B"
+    dag_name = "1D"
   )
   
   
@@ -281,6 +281,45 @@ for ( scen in scens_to_run ) {
       # ~ Make Imputed Data ------------------------------
       
       
+      # ~~ NMV-CC-std ----
+      if ( "MVN-CC-std" %in% all.methods & !is.null(di_std) ) {
+        
+        imps_mvn_cc_std = impute_mvn_cc( di_std,
+                              m = p$imp_m )
+        
+        # sanity check
+        imp1 = imps_mvn_cc_std[[1]]
+        
+        if ( any(is.na(imp1)) ) {
+          message("MI left NAs in dataset - what a butt")
+          imps_mvn_cc_std = NULL
+        }
+        
+      } else {
+        imps_mvn_cc_std = NULL
+      }
+      
+      
+      # ~~ MVN-CC-ours ----
+      if ( "MVN-CC-ours" %in% all.methods & !is.null(di_ours) ) {
+        
+        imps_mvn_cc_ours = impute_mvn_cc( di_ours,
+                                     m = p$imp_m )
+        
+        # sanity check
+        imp1 = imps_mvn_cc_std[[1]]
+        
+        if ( any(is.na(imp1)) ) {
+          message("MI left NAs in dataset - what a butt")
+          imps_mvn_cc_ours = NULL
+        }
+        
+      } else {
+        imps_mvn_cc_ours = NULL
+      }
+      
+      
+      
       # ~~ MICE-std ----
       # details of how mice() implements pmm:
       # ?mice.impute.pmm
@@ -305,65 +344,6 @@ for ( scen in scens_to_run ) {
       }
       
       
-      
-      
-      # test only: fit the imputation model manually to foreshadow collider issues
-      #bm: think through this one some more... :)
-      # but first collect the stuff running on cluster and run more to fill in table
-      if (FALSE){
-        # DAG 1D
-        if ( p$dag_name == "1D" ) {
-          summary( lm(A1 ~ B1 + C1, data = du) )
-          lm(A ~ B + C, data = du)
-          
-          summary( lm(A ~ B + C, data = di_std) )
-          # as expected, the coef for B is wrong because of C
-          
-          # look at first mice imputation
-          imp1 = complete(imps_mice_std,1)
-          summary( lm(A ~ B + C, data = imp1) )  # still has spurious association
-          
-          
-          # analysis model
-          summary( lm(B ~ A, data = imp1) )
-          
-          # cf. truth
-          summary( lm(B1 ~ A1, data = du) )
-        }
-        
-        # DAG 1F
-        if ( p$dag_name == "1F" ) {
-          summary( lm(A1~B1+D1, data = du) )
-          lm(A~B+D, data = du)
-          
-          # mimic the imputation model
-          summary( lm(A~B+C+D, data = di_std) )
-          # as expected, the coef for B is wrong because of D
-          
-          # look at first mice imputation
-          imp1 = complete(imps_mice_std,1)
-          cor(imp1) # has CORRECT (0) association between A and B; unexpected
-          
-          # but analysis model is fine!
-          # **maybe because it essentially marginalizes over D and the model for
-          #  A is collapsible?
-          summary( lm(B ~ A, data = imp1) )
-        }
-        
-        # DAG 1J
-        if ( p$dag_name == "1J" ) {
-          
-          cor(du)
-
-          # look at first mice imputation
-          imp1 = complete(imps_mice_std,1)
-          cor(imp1) # has CORRECT (0) association between C and D; unexpected since they're never observed together
-          
-   
-          summary( lm(B ~ A, data = imp1) )
-        } 
-        
-      }
       
       # ~~ MICE-ours ----
       # MICE by restricting dataset
@@ -511,6 +491,37 @@ for ( scen in scens_to_run ) {
       }
       
       if (run.local == TRUE) srr(rep.res)
+      
+      # ~~ MVN-CC-std ----
+      if ( "MVN-CC-std" %in% all.methods & !is.null(imps_mvn_cc_std) ) {
+        rep.res = run_method_safe(method.label = c("MVN-CC-std"),
+                                  
+                                  method.fn = function(x) fit_regression(form_string = form_string,
+                                                                         model = p$model,
+                                                                         coef_of_interest = coef_of_interest,
+                                                                         miss_method = "MI",
+                                                                         du = NULL,
+                                                                         imps = imps_mvn_cc_std),
+                                  .rep.res = rep.res )
+      }
+      
+      if (run.local == TRUE) srr(rep.res)
+      
+      # ~~ MVN-CC-ours ----
+      if ( "MVN-CC-ours" %in% all.methods & !is.null(imps_mvn_cc_ours) ) {
+        rep.res = run_method_safe(method.label = c("MVN-CC-ours"),
+                                  
+                                  method.fn = function(x) fit_regression(form_string = form_string,
+                                                                         model = p$model,
+                                                                         coef_of_interest = coef_of_interest,
+                                                                         miss_method = "MI",
+                                                                         du = NULL,
+                                                                         imps = imps_mvn_cc_ours),
+                                  .rep.res = rep.res )
+      }
+      
+      if (run.local == TRUE) srr(rep.res)
+      
       
       
       
@@ -668,6 +679,7 @@ for ( scen in scens_to_run ) {
 
 
 if ( run.local == TRUE ) {
+  #  View(rs_all_scens)
   dim(rs_all_scens)
   
   

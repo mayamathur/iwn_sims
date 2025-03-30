@@ -54,18 +54,21 @@ lapply( allPackages,
 scen.params = tidyr::expand_grid(
 
   #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-  rep.methods = "gold ; CC ; MICE-std ; MICE-ours",
+  rep.methods = "gold ; CC ; MVN-CC-std ; MVN-CC-ours ; MICE-std ; MICE-ours ; Am-std ; Am-ours",
 
   model = "OLS",
   coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
 
   imp_m = 50,
   imp_maxit = 200,
-  mice_method = c("norm.cc", "norm"),
+  mice_method = c("norm"),
 
   dag_name = c( "1B", "1D", "1Fb", "1J" ),
   N = c(1000)
 )
+
+# IF RUNNING AGAIN, REMOVE EXTRA COMBOS OF MICE_METHOD WITH METHODS THAT DON'T USE THIS
+# e.g., currently we're running CC with both args, with does nothing except double the number of sim reps
 
 # remove combos that aren't implemented
 scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H", "1F", "1J") &

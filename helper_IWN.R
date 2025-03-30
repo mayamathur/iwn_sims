@@ -788,7 +788,6 @@ fit_regression = function(form_string,
     if ( model == "OLS" ) {
       #if ( nuni(dat$Y) <= 2 ) stop("You have a binary outcome but are fitting OLS with model-based SEs; need to allow robust SEs")
       
-      #bm
       mod = lm( eval( parse(text = form_string) ),
                 data = dat )
       
@@ -817,8 +816,16 @@ fit_regression = function(form_string,
       #if ( nuni( complete(imps,1)$Y) <= 2 ) stop("You have a binary outcome but are fitting OLS with model-based SEs; need to allow robust SEs")
       
       # works for both MICE and Amelia
-      mod = with(imps,
-                 lm( eval( parse(text = form_string) ) ) )
+      if ( class(imps) %in% c("amelia", "mids") ) {
+        mod = with(imps,
+                   lm( eval( parse(text = form_string) ) ) )
+      }
+      
+      # for custom imputation
+      if ( class(imps) == "list" ) {
+        mod = lapply(imps, function(x) { lm(formula = as.formula(form_string), data = x) })
+      }
+    
     }
     
     
@@ -826,6 +833,22 @@ fit_regression = function(form_string,
       mod = with(imps,
                  glm( eval( parse(text = form_string) ),
                       family = binomial(link = "logit") ) )
+      
+      
+      # works for both MICE and Amelia
+      if ( class(imps) %in% c("amelia", "mids") ) {
+        mod = with(imps,
+                   lm( eval( parse(text = form_string),
+                             family = binomial(link = "logit") ) ) )
+      }
+      
+      # for custom imputation
+      if ( class(imps) == "list" ) {
+        mod = lapply(imps, function(x) { lm(formula = as.formula(form_string,
+                                                                 family = binomial(link = "logit") ), data = x) })
+      }
+      
+      
     }
     
     mod_pool = pool(mod)
@@ -960,120 +983,82 @@ imps_cor = function(.imps){
 }
 
 
-# CUSOTM MICE METHOD: TRAIN IMPUTATION MODEL ONLY ON COMPLETE CASES  -------------------------------------------------
+# CUSTOM MVN IMPUTATION: TRAIN IMPUTATION MODEL ONLY ON COMPLETE CASES  -------------------------------------------------
 
-# function is verbatim from mice.impute.pmm.R except where o.w. noted:
-# https://github.com/amices/mice/blob/master/R/mice.impute.pmm.R?utm_source=chatgpt.com
+# NEED TO ADD TO DOPARALLEL
+library(mvtnorm)
 
-# Custom PMM that fits only on complete cases of x and y
-mice.impute.pmm.cc <- function(y, ry, x, wy = NULL, donors = 5L,
-                            matchtype = 1L, exclude = NULL,
-                            quantify = TRUE, trim = 1L,
-                            ridge = 1e-05, use.matcher = FALSE, ...) {
-  if (is.null(wy)) {
-    wy <- !ry
+impute_mvn_cc <- function(data, m = 5) {
+
+  data <- as.data.frame(data)
+  complete_data <- data[complete.cases(data), ]
+  if (nrow(complete_data) < 2) {
+    stop("Not enough complete cases to fit the multivariate normal model.")
   }
   
-  # Reformulate the imputation problem such that
-  # 1. the imputation model disregards records with excluded y-values
-  # 2. the donor set does not contain excluded y-values
+  mu <- colMeans(complete_data)
+  Sigma <- cov(complete_data)
+  imputed_list <- vector("list", m)
   
-  # Keep sparse categories out of the imputation model
-  if (is.factor(y)) {
-    active <- !ry | y %in% (levels(y)[table(y) >= trim])
-    y <- y[active]
-    ry <- ry[active]
-    x <- x[active, , drop = FALSE]
-    wy <- wy[active]
-  }
-  # Keep excluded values out of the imputation model
-  if (!is.null(exclude)) {
-    active <- !ry | !y %in% exclude
-    y <- y[active]
-    ry <- ry[active]
-    x <- x[active, , drop = FALSE]
-    wy <- wy[active]
-  }
-  
-  x <- cbind(1, as.matrix(x))
-  
-  # quantify categories for factors
-  ynum <- y
-  if (is.factor(y)) {
-    if (quantify) {
-      ynum <- quantify(y, ry, x)
-    } else {
-      ynum <- as.integer(y)
+  for (i in 1:m) {
+    imputed_data <- data
+    for (r in 1:nrow(data)) {
+      missing_vars <- which(is.na(data[r, ]))
+      if (length(missing_vars) > 0) {
+        observed_vars <- which(!is.na(data[r, ]))
+        if (length(observed_vars) == 0) {
+          imputed_values <- as.numeric(rmvnorm(1, mean = mu, sigma = Sigma))
+        } else {
+          mu_obs <- mu[observed_vars]
+          mu_miss <- mu[missing_vars]
+          Sigma_obs_obs <- Sigma[observed_vars, observed_vars, drop = FALSE]
+          Sigma_miss_obs <- Sigma[missing_vars, observed_vars, drop = FALSE]
+          Sigma_obs_miss <- Sigma[observed_vars, missing_vars, drop = FALSE]
+          Sigma_miss_miss <- Sigma[missing_vars, missing_vars, drop = FALSE]
+          
+          x_obs <- as.numeric(data[r, observed_vars])
+          cond_mean <- mu_miss + Sigma_miss_obs %*% solve(Sigma_obs_obs) %*% (x_obs - mu_obs)
+          cond_cov <- Sigma_miss_miss - Sigma_miss_obs %*% solve(Sigma_obs_obs) %*% Sigma_obs_miss
+          
+          imputed_values <- as.numeric(rmvnorm(1, mean = as.numeric(cond_mean), sigma = cond_cov))
+        }
+        imputed_data[r, missing_vars] <- imputed_values
+      }
     }
+    imputed_list[[i]] <- imputed_data
   }
   
-  # parameter estimation
-  #### MM EDIT: Restrict model-fitting to complete cases
-  cc_rows <- complete.cases( cbind(x, ynum) )  # or more defensively: x & y[ry]
-  parm <- .norm.draw( ynum[cc_rows],
-                      rep(TRUE, sum(cc_rows)),
-                      x[cc_rows, , drop = FALSE],
-                      ridge = ridge, ... )
-  # c.f. original version:
-  #parm <- .norm.draw(ynum, ry, x, ridge = ridge, ...)
-  #### END MM EDIT
-
-  if (matchtype == 0L) {
-    yhatobs <- x[ry, , drop = FALSE] %*% parm$coef
-    yhatmis <- x[wy, , drop = FALSE] %*% parm$coef
-  }
-  if (matchtype == 1L) {
-    yhatobs <- x[ry, , drop = FALSE] %*% parm$coef
-    yhatmis <- x[wy, , drop = FALSE] %*% parm$beta
-  }
-  if (matchtype == 2L) {
-    yhatobs <- x[ry, , drop = FALSE] %*% parm$beta
-    yhatmis <- x[wy, , drop = FALSE] %*% parm$beta
-  }
-  if (use.matcher) {
-    idx <- matcher(yhatobs, yhatmis, k = donors)
-  } else {
-    idx <- matchindex(yhatobs, yhatmis, donors)
-  }
-  
-  return(y[ry][idx])
+  return(imputed_list)
 }
 
-# Custom normal-model imputation that fits only on complete cases of x and y
-mice.impute.norm.cc <- function(y, ry, x, wy = NULL, ...) {
-  
-  if (is.null(wy)) wy <- !ry
-  x <- cbind(1, as.matrix(x))
-  
-  #### MM EDIT: Restrict model-fitting to complete cases
-  cc_rows <- complete.cases( cbind(x, y) )  # or more defensively: x & y[ry]
-  parm <- .norm.draw(y[cc_rows], ry[cc_rows], x[cc_rows, , drop = FALSE], ...)
-  # c.f. original version:
-  #  parm <- .norm.draw(y, ry, x, ...)
-  #### END MM EDIT
 
-  x[wy, ] %*% parm$beta + rnorm(sum(wy)) * parm$sigma
-  
-}
 
-# # example:
+# ## Test on nhanes data
 # data(nhanes)
-# df <- nhanes
 # 
-# # Set up method and predictor matrix
-# ini <- mice(df, maxit = 0)
-# methods <- ini$method
-# pred <- ini$predictorMatrix
+# # using Amelia (off the rack)
+# imps_am_std = amelia( as.data.frame(nhanes),
+#                       m=10,
+#                       p2s = 0 )
 # 
-# # Replace imputation method with custom pmm.cc
-# methods[methods == "pmm"] <- "norm.cc"
+# fit_regression(form_string = "bmi ~ chl",
+#                model = "OLS",
+#                coef_of_interest = "chl",
+#                miss_method = "MI",
+#                imps = imps_am_std)
 # 
-# # Run imputation
-# imp <- mice(df, method = methods, predictorMatrix = pred, m = 5, maxit = 5, print = FALSE)
 # 
-# # View imputed datasets
-# completed <- complete(imp, action = "long")
-# completed
+# 
+# #### Using mvn_cc
+# imps_mvn_cc = impute_mvn_cc(nhanes, m=10)
+# 
+# fit_regression(form_string = "bmi ~ chl",
+#                model = "OLS",
+#                coef_of_interest = "chl",
+#                miss_method = "MI",
+#                imps = imps_mvn_cc)
+
+
 
 
 # SMALL GENERIC HELPERS ---------------------
@@ -1416,7 +1401,8 @@ res1 = function() {
 
 make_agg_data = function(s) {
   
-  correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
+  correct.order = c("gold", "CC", "MICE-std-norm.cc", "MICE-ours-norm.cc", "MICE-std-norm", "MICE-ours-norm" )
+  #correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
   s$method = factor(s$method, levels = correct.order)
   
   # fill in beta (where it's NA) using gold-standard
@@ -1482,8 +1468,10 @@ wrangle_agg_data = function(.aggo) {
   agg$method_pretty[ agg$method == "CC" ] = "Complete-case"
   agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
   agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
-  agg$method_pretty[ agg$method == "MICE-std" ] = "MICE (standard)"
-  agg$method_pretty[ agg$method == "MICE-ours" ] = "MICE (m-backdoor)"
+  agg$method_pretty[ agg$method == "MICE-std-norm.cc" ] = "MICE (standard)"
+  agg$method_pretty[ agg$method == "MICE-ours-norm.cc" ] = "MICE (m-backdoor)"
+  agg$method_pretty[ agg$method == "MICE-std-norm" ] = "MICE (standard) norm"
+  agg$method_pretty[ agg$method == "MICE-ours-norm" ] = "MICE (m-backdoor) norm"
   
   return(agg)
 }

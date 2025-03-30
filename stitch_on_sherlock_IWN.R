@@ -143,10 +143,11 @@ as.data.frame(t)
 
 #as.data.frame( t %>% filter(dag_name == "1F") %>% select(method, Bhat, BhatBias, BhatCover) )
 
-path = "/home/groups/manishad/IWN/overall_stitched"
-setwd(path)
-write.xlsx(as.data.frame(t),
-           paste(Sys.Date(), "agg.xlsx") )
+# now I'm doing this step locally
+# path = "/home/groups/manishad/IWN/overall_stitched"
+# setwd(path)
+# write.xlsx(as.data.frame(t),
+#            paste(Sys.Date(), "agg.xlsx") )
 
 
 # ~ Write stitched.csv ---------------------------

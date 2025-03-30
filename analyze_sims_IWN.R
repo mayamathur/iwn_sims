@@ -45,11 +45,11 @@ for (pkg in to.load) {
 code.dir = here()
 
 data.dir = str_replace_all( string = here(),
-                            replacement = "Results/2024-07-30 - as in first journal submission",
+                            replacement = "Results/2025-03-30 - train on complete cases",
                             pattern = "Code" ) 
 
 results.dir = str_replace_all( string = here(),
-                               replacement = "Results/2024-07-30 - as in first journal submission",
+                               replacement = "Results/2025-03-30 - train on complete cases",
                                pattern = "Code" ) 
 setwd(results.dir)  # check it
 
@@ -91,7 +91,7 @@ file.info("agg.csv")$ctime
 
 table(agg$method_pretty)
 
-method_keepers = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours")
+method_keepers = c("gold", "CC", "Am-std", "Am-ours", "MICE-std-norm.cc", "MICE-ours-norm.cc")
 agg = agg %>% filter(method %in% method_keepers)
 agg = droplevels(agg)
 

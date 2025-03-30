@@ -45,11 +45,11 @@ for (pkg in to.load) {
 code.dir = here()
 
 data.dir = str_replace_all( string = here(),
-                            replacement = "Results/2024-07-30 - as in first journal submission",
+                            replacement = "Results/2025-03-30 - train on complete cases",
                             pattern = "Code" ) 
 
 results.dir = str_replace_all( string = here(),
-                               replacement = "Results/2024-07-30 - as in first journal submission",
+                               replacement = "Results/2025-03-30 - train on complete cases",
                                pattern = "Code" ) 
 setwd(results.dir)  # check it
 
@@ -110,6 +110,14 @@ table(t$`n()`)
 
 
 # MAKE AGG DATA ---------------------------------------------------------------
+
+# first append mice method to imputation model name
+s$temp = paste( "-", s$mice_method, sep = "" )  # for concatenation joy
+s$temp[ grepl( pattern = "MICE", s$method ) == FALSE ] = "" 
+# check it
+table(s$method, s$temp)
+# append to method to make a truly unique method variable
+s$method = paste(s$method, s$temp, sep = "")
 
 aggo = make_agg_data(s)
 agg = wrangle_agg_data(.aggo = aggo)
