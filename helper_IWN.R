@@ -1399,8 +1399,7 @@ res1 = function() {
 
 make_agg_data = function(s) {
   
-  correct.order = c("gold", "CC", "MICE-std-norm.cc", "MICE-ours-norm.cc", "MICE-std-norm", "MICE-ours-norm" )
-  #correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
+  correct.order = c("gold", "CC", "MVN-CC-std", "Am-std", "MICE-std", "MVN-CC-ours", "Am-ours", "MICE-ours")
   s$method = factor(s$method, levels = correct.order)
   
   # fill in beta (where it's NA) using gold-standard
@@ -1468,8 +1467,8 @@ wrangle_agg_data = function(.aggo) {
   agg$method_pretty[ agg$method == "MVN-CC-ours" ] = "MVN (m-backdoor)"
   agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
   agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
-  agg$method_pretty[ agg$method == "MICE-std-norm" ] = "MICE (standard)"
-  agg$method_pretty[ agg$method == "MICE-ours-norm" ] = "MICE (m-backdoor)"
+  agg$method_pretty[ agg$method == "MICE-std" ] = "MICE (standard)"
+  agg$method_pretty[ agg$method == "MICE-ours" ] = "MICE (m-backdoor)"
   
   return(agg)
 }

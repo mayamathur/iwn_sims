@@ -91,23 +91,29 @@ file.info("agg.csv")$ctime
 
 table(agg$method_pretty)
 
-method_keepers = c("gold", "CC", "Am-std", "Am-ours", "MICE-std-norm.cc", "MICE-ours-norm.cc")
-agg = agg %>% filter(method %in% method_keepers)
-agg = droplevels(agg)
-
 
 # reorder methods
-correct_order = c("Benchmark", "Complete-case", "Amelia (standard)", "MICE (standard)", "Amelia (m-backdoor)", "MICE (m-backdoor)")
+correct_order = c("Benchmark", "Complete-case", "MVN (standard)", "Amelia (standard)", "MICE (standard)", "MVN (m-backdoor)", "Amelia (m-backdoor)", "MICE (m-backdoor)")
 agg$method_pretty = factor(agg$method_pretty, levels = correct_order)
 levels(agg$method_pretty)
 
+
+
+### Table with all imputation methods (Supplement)
 t = agg %>% select(dag_name_pretty, coef_of_interest_pretty, method_pretty, BhatBias, BhatRMSE, BhatCover) %>%
   arrange( dag_name_pretty, coef_of_interest_pretty, method_pretty )
-
-
-View(t)
+# to be filled in manually
+t = t %>% add_column(aux_included = NA, .after = "coef_of_interest_pretty")
 
 print( xtable(t), include.rownames = FALSE)
+
+
+## Table with just MVN-CC methods for imputation (main text)
+# also remove the file-matching DAG
+t2 = t %>% filter( method_pretty %in% c("Benchmark", "Complete-case", "MVN (standard)", "MVN (m-backdoor)") &
+                     dag_name_pretty != "DAG (d)" )
+
+print( xtable(t2), include.rownames = FALSE)
 
 
 

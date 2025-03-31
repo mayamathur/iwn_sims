@@ -160,6 +160,19 @@ string = paste("zip -m stitched.zip", .stitch.file.name)
 system(string)
 
 
+# ~ Make agg data -------------------------------------------------
+
+aggo = make_agg_data(s)
+agg = wrangle_agg_data(.aggo = aggo)
+
+table(agg$method_pretty)
+
+setwd(.results.stitched.write.path)
+fwrite(agg, "agg.csv")
+
+
+
+
 
 # LOOK FOR MISSED JOBS ----------------------------------------------
 
