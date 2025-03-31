@@ -111,14 +111,6 @@ table(t$`n()`)
 
 # MAKE AGG DATA ---------------------------------------------------------------
 
-# first append mice method to imputation model name
-s$temp = paste( "-", s$mice_method, sep = "" )  # for concatenation joy
-s$temp[ grepl( pattern = "MICE", s$method ) == FALSE ] = "" 
-# check it
-table(s$method, s$temp)
-# append to method to make a truly unique method variable
-s$method = paste(s$method, s$temp, sep = "")
-
 aggo = make_agg_data(s)
 agg = wrangle_agg_data(.aggo = aggo)
 

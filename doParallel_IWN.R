@@ -282,8 +282,9 @@ for ( scen in scens_to_run ) {
       # ~ Make Imputed Data ------------------------------
       
       
-      # ~~ NMV-CC-std ----
-      if ( "MVN-CC-std" %in% all.methods & !is.null(di_std) ) {
+      # ~~ MVN-CC-std ----
+      # don't run for DAG 1J because it has no CCs by design
+      if ( "MVN-CC-std" %in% all.methods & !is.null(di_std) & p$dag_name != "1J" ) {
         
         imps_mvn_cc_std = impute_mvn_cc( di_std,
                               m = p$imp_m )
@@ -302,7 +303,7 @@ for ( scen in scens_to_run ) {
       
       
       # ~~ MVN-CC-ours ----
-      if ( "MVN-CC-ours" %in% all.methods & !is.null(di_ours) ) {
+      if ( "MVN-CC-ours" %in% all.methods & !is.null(di_ours) & p$dag_name != "1J" ) {
         
         imps_mvn_cc_ours = impute_mvn_cc( di_ours,
                                      m = p$imp_m )

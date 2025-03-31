@@ -148,7 +148,7 @@ source("helper_IWN.R")
 missed.nums = sbatch_not_run( "/home/groups/manishad/IWN/long_results",
                               "/home/groups/manishad/IWN/long_results",
                               .name.prefix = "long_results",
-                              .max.sbatch.num = 700 )
+                              .max.sbatch.num = 350 )
 
 
 
