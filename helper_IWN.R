@@ -985,49 +985,107 @@ imps_cor = function(.imps){
 
 # CUSTOM MVN IMPUTATION: TRAIN IMPUTATION MODEL ONLY ON COMPLETE CASES  -------------------------------------------------
 
-
 impute_mvn_cc <- function(data, m = 5) {
-
+  
   data <- as.data.frame(data)
   complete_data <- data[complete.cases(data), ]
-  if (nrow(complete_data) < 2) {
-    stop("Not enough complete cases to fit the multivariate normal model.")
-  }
+  n_cc <- nrow(complete_data)
+  if (n_cc < 2) stop("Not enough complete cases to fit MVN model.")
   
-  mu <- colMeans(complete_data)
-  Sigma <- cov(complete_data)
+  p <- ncol(complete_data)
+  
+  # initialize MVN mean and covariance matrix
+  mu_hat <- colMeans(complete_data)
+  S <- cov(complete_data)
+  
   imputed_list <- vector("list", m)
   
   for (i in 1:m) {
+    # draw from Inv-Wishart posterior over parameters
+    Sigma_star <- riwish(n_cc - 1, (n_cc - 1) * S)  # Inv-Wishart(n-1, (n-1)*S)
+    mu_star <- as.numeric(rmvnorm(1, mean = mu_hat, sigma = Sigma_star / n_cc))
+    
     imputed_data <- data
+    
     for (r in 1:nrow(data)) {
+      
       missing_vars <- which(is.na(data[r, ]))
+      
       if (length(missing_vars) > 0) {
         observed_vars <- which(!is.na(data[r, ]))
+        
         if (length(observed_vars) == 0) {
-          imputed_values <- as.numeric(rmvnorm(1, mean = mu, sigma = Sigma))
+          # if row is fully missing row, use unconditional MVN draw
+          imputed_values <- as.numeric(rmvnorm(1, mean = mu_star, sigma = Sigma_star))
         } else {
-          mu_obs <- mu[observed_vars]
-          mu_miss <- mu[missing_vars]
-          Sigma_obs_obs <- Sigma[observed_vars, observed_vars, drop = FALSE]
-          Sigma_miss_obs <- Sigma[missing_vars, observed_vars, drop = FALSE]
-          Sigma_obs_miss <- Sigma[observed_vars, missing_vars, drop = FALSE]
-          Sigma_miss_miss <- Sigma[missing_vars, missing_vars, drop = FALSE]
+          mu_obs <- mu_star[observed_vars]
+          mu_miss <- mu_star[missing_vars]
+          Sigma_obs_obs <- Sigma_star[observed_vars, observed_vars, drop = FALSE]
+          Sigma_miss_obs <- Sigma_star[missing_vars, observed_vars, drop = FALSE]
+          Sigma_obs_miss <- Sigma_star[observed_vars, missing_vars, drop = FALSE]
+          Sigma_miss_miss <- Sigma_star[missing_vars, missing_vars, drop = FALSE]
           
           x_obs <- as.numeric(data[r, observed_vars])
+          
           cond_mean <- mu_miss + Sigma_miss_obs %*% solve(Sigma_obs_obs) %*% (x_obs - mu_obs)
           cond_cov <- Sigma_miss_miss - Sigma_miss_obs %*% solve(Sigma_obs_obs) %*% Sigma_obs_miss
           
-          imputed_values <- as.numeric(rmvnorm(1, mean = as.numeric(cond_mean), sigma = cond_cov))
+          imputed_values <- as.numeric(rmvnorm(1, mean = cond_mean, sigma = cond_cov))
         }
+        
         imputed_data[r, missing_vars] <- imputed_values
       }
     }
+    
     imputed_list[[i]] <- imputed_data
   }
   
   return(imputed_list)
 }
+
+# with fixed mu and Sigma: undercovers
+# impute_mvn_cc <- function(data, m = 5) {
+# 
+#   data <- as.data.frame(data)
+#   complete_data <- data[complete.cases(data), ]
+#   if (nrow(complete_data) < 2) {
+#     stop("Not enough complete cases to fit the multivariate normal model.")
+#   }
+#   
+#   mu <- colMeans(complete_data)
+#   Sigma <- cov(complete_data)
+#   imputed_list <- vector("list", m)
+#   
+#   for (i in 1:m) {
+#     imputed_data <- data
+#     for (r in 1:nrow(data)) {
+#       missing_vars <- which(is.na(data[r, ]))
+#       if (length(missing_vars) > 0) {
+#         observed_vars <- which(!is.na(data[r, ]))
+#         if (length(observed_vars) == 0) {
+#           imputed_values <- as.numeric(rmvnorm(1, mean = mu, sigma = Sigma))
+#         } else {
+#           mu_obs <- mu[observed_vars]
+#           mu_miss <- mu[missing_vars]
+#           Sigma_obs_obs <- Sigma[observed_vars, observed_vars, drop = FALSE]
+#           Sigma_miss_obs <- Sigma[missing_vars, observed_vars, drop = FALSE]
+#           Sigma_obs_miss <- Sigma[observed_vars, missing_vars, drop = FALSE]
+#           Sigma_miss_miss <- Sigma[missing_vars, missing_vars, drop = FALSE]
+#           
+#           x_obs <- as.numeric(data[r, observed_vars])
+#           cond_mean <- mu_miss + Sigma_miss_obs %*% solve(Sigma_obs_obs) %*% (x_obs - mu_obs)
+#           cond_cov <- Sigma_miss_miss - Sigma_miss_obs %*% solve(Sigma_obs_obs) %*% Sigma_obs_miss
+#           
+#           imputed_values <- as.numeric(rmvnorm(1, mean = as.numeric(cond_mean), sigma = cond_cov))
+#         }
+#         imputed_data[r, missing_vars] <- imputed_values
+#       }
+#     }
+#     imputed_list[[i]] <- imputed_data
+#   }
+#   
+#   return(imputed_list)
+# }
 
 
 
@@ -1055,6 +1113,26 @@ impute_mvn_cc <- function(data, m = 5) {
 #                coef_of_interest = "chl",
 #                miss_method = "MI",
 #                imps = imps_mvn_cc)
+
+
+riwish <- function(df, S) {
+  p <- nrow(S)
+  Z <- matrix(0, p, p)
+  for (i in 1:p) {
+    Z[i, i] <- sqrt(rchisq(1, df - i + 1))
+    if (i < p) {
+      Z[(i+1):p, i] <- rnorm(p - i)
+    }
+  }
+  C <- t(Z)
+  # Compute the inverse-Wishart draw:
+  # A ~ Wishart(df, I) ⇒ inv(C) %*% S %*% t(inv(C)) ~ Inv-Wishart(df, S)
+  T_matrix <- chol(S)
+  IW_draw <- backsolve(C, diag(p))         # C⁻¹
+  IW_draw <- T_matrix %*% IW_draw          # S^(1/2) * C⁻¹
+  Sigma <- IW_draw %*% t(IW_draw)          # (S^(1/2) * C⁻¹)(...)ᵗ
+  return(Sigma)
+}
 
 
 

@@ -74,6 +74,10 @@ if (run.local == FALSE ) {
   }
   if ( any.failed == TRUE ) stop("Some packages couldn't be loaded. See outfile for details of which ones.")
   
+  
+  # avoid competition with MCMCpack's dependencies
+  select = dplyr::select
+  
   # helper code
   path = "/home/groups/manishad/IWN"
   setwd(path)
@@ -109,6 +113,9 @@ if ( run.local == TRUE ) {
           require,
           character.only = TRUE)
   
+  # avoid competition with MCMCpack's dependencies
+  select = dplyr::select
+
   
   # helper fns
   code.dir = here()
@@ -126,7 +133,7 @@ if ( run.local == TRUE ) {
   scen.params = tidyr::expand_grid(
     
     #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-    rep.methods = "gold ; MVN-CC-std ; MVN-CC-ours ; Am-std ; Am-ours", 
+    rep.methods = "gold ; MVN-CC-ours ; Am-ours", 
     
     model = "OLS",
     coef_of_interest = "(Intercept)",
@@ -144,7 +151,7 @@ if ( run.local == TRUE ) {
     # N = c(100),
     
     #dag_name = c( "1B", "1D", "1G", "1H" ),
-    dag_name = "1D"
+    dag_name = "1B"
   )
   
   

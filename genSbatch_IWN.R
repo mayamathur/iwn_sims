@@ -15,6 +15,7 @@ allPackages = c("here",
                 "tidyr",
                 "tibble",
                 "testthat",
+                "MCMCpack",
                 #"Hmisc",
                 "stringr")
 
@@ -34,18 +35,19 @@ lapply( allPackages,
 
 # # ISOLATE SCENS
 # scen.params = tidyr::expand_grid(
-#   
+# 
 #   #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-#   rep.methods = "gold ; CC ; MVN-CC-std ; MVN-CC-ours ; MICE-std ; MICE-ours ; Am-std ; Am-ours",
-#   
+#   #rep.methods = "gold ; CC ; MVN-CC-std ; MVN-CC-ours ; MICE-std ; MICE-ours ; Am-std ; Am-ours",
+#   rep.methods = "gold ; MVN-CC-ours ; Am-ours",
+# 
 #   model = "OLS",
 #   coef_of_interest = c( "(Intercept)"),  # "(Intercept)" or "A"
-#   
+# 
 #   imp_m = 50,
 #   imp_maxit = 200,
 #   mice_method = c("pmm"),
-#   
-#   dag_name = c("1D"),
+# 
+#   dag_name = c("1B"),
 #   N = c(1000)
 # )
 
