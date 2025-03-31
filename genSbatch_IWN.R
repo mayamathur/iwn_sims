@@ -34,21 +34,21 @@ lapply( allPackages,
 
 # # ISOLATE SCENS
 # scen.params = tidyr::expand_grid(
-# 
+#   
 #   #rep.methods = "gold ; CC ; MICE-std ; Am-std ; MICE-ours ; MICE-ours-pred ; Am-ours",
-#   rep.methods = "gold ; MICE-std ; Am-std",
-# 
+#   rep.methods = "gold ; CC ; MVN-CC-std ; MVN-CC-ours ; MICE-std ; MICE-ours ; Am-std ; Am-ours",
+#   
 #   model = "OLS",
-#   #coef_of_interest = c( "(Intercept)", "A"),  # "(Intercept)" or "A"
-#   coef_of_interest = c("A"),  # "(Intercept)" or "A"
-# 
+#   coef_of_interest = c( "(Intercept)"),  # "(Intercept)" or "A"
+#   
 #   imp_m = 50,
 #   imp_maxit = 200,
-#   mice_method = "norm",
-# 
-#   dag_name = c( "1J" ),
+#   mice_method = c("pmm"),
+#   
+#   dag_name = c("1D"),
 #   N = c(1000)
 # )
+
 
 # FULL SIMS
 scen.params = tidyr::expand_grid(
@@ -61,14 +61,11 @@ scen.params = tidyr::expand_grid(
 
   imp_m = 50,
   imp_maxit = 200,
-  mice_method = c("norm"),
+  mice_method = c("pmm"),
 
   dag_name = c( "1B", "1D", "1Fb", "1J" ),
   N = c(1000)
 )
-
-# IF RUNNING AGAIN, REMOVE EXTRA COMBOS OF MICE_METHOD WITH METHODS THAT DON'T USE THIS
-# e.g., currently we're running CC with both args, with does nothing except double the number of sim reps
 
 # remove combos that aren't implemented
 scen.params = scen.params %>% filter( !(dag_name %in% c("1G", "1H", "1F", "1J") &
@@ -94,7 +91,7 @@ write.csv( scen.params, "scen_params.csv", row.names = FALSE )
 source("helper_IWN.R")
 
 # number of sbatches to generate (i.e., iterations within each scenario)
-n.reps.per.scen = 5000
+n.reps.per.scen = 5000  
 n.reps.in.doParallel = 100
 ( n.files = ( n.reps.per.scen / n.reps.in.doParallel ) * n.scen )
 
@@ -111,7 +108,7 @@ runfile_path = paste(path, "/testRunFile.R", sep="")
 sbatch_params <- data.frame(jobname,
                             outfile,
                             errorfile,
-                            jobtime = "01:00:00", 
+                            jobtime = "02:00:00", 
                             quality = "normal",
                             node_number = 1,
                             mem_per_node = 64000,
@@ -129,18 +126,16 @@ generateSbatch(sbatch_params, runfile_path)
 
 n.files
 
+
 # run just the first one
 # sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/1.sbatch
 
-# 700 files
+
 path = "/home/groups/manishad/IWN"
 setwd( paste(path, "/sbatch_files", sep="") )
-for (i in 1:700) {
+for (i in 1:350) {
   system( paste("sbatch -p qsu,owners,normal /home/groups/manishad/IWN/sbatch_files/", i, ".sbatch", sep="") )
 }
-
-
-
 
 
 ######## If Running Only Some Jobs To Fill Gaps ########

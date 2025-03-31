@@ -985,8 +985,6 @@ imps_cor = function(.imps){
 
 # CUSTOM MVN IMPUTATION: TRAIN IMPUTATION MODEL ONLY ON COMPLETE CASES  -------------------------------------------------
 
-# NEED TO ADD TO DOPARALLEL
-library(mvtnorm)
 
 impute_mvn_cc <- function(data, m = 5) {
 
@@ -1466,12 +1464,12 @@ wrangle_agg_data = function(.aggo) {
   agg$method_pretty = as.character(agg$method)
   agg$method_pretty[ agg$method == "gold" ] = "Benchmark"
   agg$method_pretty[ agg$method == "CC" ] = "Complete-case"
+  agg$method_pretty[ agg$method == "MVN-CC-std" ] = "MVN (standard)"
+  agg$method_pretty[ agg$method == "MVN-CC-ours" ] = "MVN (m-backdoor)"
   agg$method_pretty[ agg$method == "Am-std" ] = "Amelia (standard)"
   agg$method_pretty[ agg$method == "Am-ours" ] = "Amelia (m-backdoor)"
-  agg$method_pretty[ agg$method == "MICE-std-norm.cc" ] = "MICE (standard)"
-  agg$method_pretty[ agg$method == "MICE-ours-norm.cc" ] = "MICE (m-backdoor)"
-  agg$method_pretty[ agg$method == "MICE-std-norm" ] = "MICE (standard) norm"
-  agg$method_pretty[ agg$method == "MICE-ours-norm" ] = "MICE (m-backdoor) norm"
+  agg$method_pretty[ agg$method == "MICE-std-norm" ] = "MICE (standard)"
+  agg$method_pretty[ agg$method == "MICE-ours-norm" ] = "MICE (m-backdoor)"
   
   return(agg)
 }

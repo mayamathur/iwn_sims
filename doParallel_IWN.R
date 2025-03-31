@@ -36,6 +36,7 @@ toLoad = c("crayon",
            "stringr",
            "mice",
            "Amelia",
+           "mvtnorm",
            "sandwich")
 
 if ( run.local == TRUE | interactive.cluster.run == TRUE ) toLoad = c(toLoad, "here")
@@ -493,7 +494,8 @@ for ( scen in scens_to_run ) {
       if (run.local == TRUE) srr(rep.res)
       
       # ~~ MVN-CC-std ----
-      if ( "MVN-CC-std" %in% all.methods & !is.null(imps_mvn_cc_std) ) {
+      # don't run for DAG 1J because it has no CCs by design
+      if ( "MVN-CC-std" %in% all.methods & !is.null(imps_mvn_cc_std) & p$dag_name != "1J" ) {
         rep.res = run_method_safe(method.label = c("MVN-CC-std"),
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
@@ -508,7 +510,7 @@ for ( scen in scens_to_run ) {
       if (run.local == TRUE) srr(rep.res)
       
       # ~~ MVN-CC-ours ----
-      if ( "MVN-CC-ours" %in% all.methods & !is.null(imps_mvn_cc_ours) ) {
+      if ( "MVN-CC-ours" %in% all.methods & !is.null(imps_mvn_cc_ours)  & p$dag_name != "1J" ) {
         rep.res = run_method_safe(method.label = c("MVN-CC-ours"),
                                   
                                   method.fn = function(x) fit_regression(form_string = form_string,
@@ -712,9 +714,7 @@ if ( run.local == TRUE ) {
   
   as.data.frame(t)
   
-  #bm: confounder file-matching is not biased?? why?
-  # come back to this one...
-  
+
   
   setwd(data.dir)
   fwrite( rs_all_scens,

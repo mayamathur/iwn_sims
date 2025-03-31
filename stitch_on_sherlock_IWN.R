@@ -4,7 +4,7 @@ path = "/home/groups/manishad/IWN"
 setwd(path)
 source("stitch_on_sherlock_helper.R")
 
-stitch()
+#stitch()
 
 
 
@@ -95,7 +95,7 @@ table(s$dag_name)
 # sanity check
 table(s$dag_name, s$coef_of_interest)
 
-correct.order = c("gold", "CC", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
+correct.order = c("gold", "CC", "MVN-std", "MVN-ours", "Am-std", "Am-ours", "MICE-std", "MICE-ours", "MICE-ours-pred")
 s$method = factor(s$method, levels = correct.order)
 
 # fill in beta (where it's NA) using gold-standard
@@ -172,7 +172,7 @@ source("analyze_sims_helper_IWN.R")
 missed.nums = sbatch_not_run( "/home/groups/manishad/IWN/long_results",
                               "/home/groups/manishad/IWN/long_results",
                               .name.prefix = "long",
-                              .max.sbatch.num = 700)
+                              .max.sbatch.num = 350)
 
 # run any missed jobs
 setwd( paste(path, "/sbatch_files", sep="") )
