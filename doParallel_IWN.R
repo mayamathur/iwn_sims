@@ -143,7 +143,7 @@ if ( run.local == TRUE ) {
     # as on cluster
     imp_m = 5,  # CURRENTLY SET LOW
     imp_maxit = 100,
-    mice_method = "norm", # custom method to train only on CCs
+    mice_method = "norm", 
     
     # # for quicker sims
     # imp_m = 5,
@@ -186,8 +186,7 @@ if ( run.local == TRUE ) {
   start.at = 1  # scen name to start at
   scen.params$scen = start.at:( nrow(scen.params) + start.at - 1 )
   
-  sim.reps = 1  # reps to run in this iterate
-  
+
   # set the number of local cores
   registerDoParallel(cores=8)
   
@@ -202,6 +201,9 @@ if ( run.local == TRUE ) {
 
 
 # RUN SIMULATION ------------------------------
+
+# set local sim.reps
+if (run.local == TRUE) sim.reps = 500 
 
 
 # mimic Sherlock structure

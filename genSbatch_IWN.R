@@ -15,8 +15,6 @@ allPackages = c("here",
                 "tidyr",
                 "tibble",
                 "testthat",
-                "MCMCpack",
-                #"Hmisc",
                 "stringr")
 
 ( packagesNeeded = allPackages[ !( allPackages %in% installed.packages()[,"Package"] ) ] )
