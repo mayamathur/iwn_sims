@@ -465,7 +465,7 @@ sim_data = function(.p) {
               B = ifelse(RB == 0, NA, B1),
               D = D1)
     
-    
+     
     #cor(du %>% select(A,B,C,D))
     
     # make dataset for imputation (standard way: all measured variables)
