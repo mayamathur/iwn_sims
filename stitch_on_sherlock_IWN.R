@@ -137,8 +137,6 @@ t = s2 %>% group_by(dag_name, coef_of_interest, method) %>%
   mutate_if(is.numeric, function(x) round(x,2)) 
 
 
-
-
 as.data.frame(t)
 
 #as.data.frame( t %>% filter(dag_name == "1F") %>% select(method, Bhat, BhatBias, BhatCover) )
