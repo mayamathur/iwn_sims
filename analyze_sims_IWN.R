@@ -45,11 +45,11 @@ for (pkg in to.load) {
 code.dir = here()
 
 data.dir = str_replace_all( string = here(),
-                            replacement = "Results/2025-03-30 - train on complete cases",
+                            replacement = "Results/2025-04-01b - MVN-CC uses bootstrap",
                             pattern = "Code" ) 
 
 results.dir = str_replace_all( string = here(),
-                               replacement = "Results/2025-03-30 - train on complete cases",
+                               replacement = "Results/2025-04-01b - MVN-CC uses bootstrap",
                                pattern = "Code" ) 
 setwd(results.dir)  # check it
 
@@ -95,7 +95,7 @@ table(agg$method_pretty)
 # reorder methods
 correct_order = c("Benchmark", "Complete-case", "MVN (standard)", "Amelia (standard)", "MICE (standard)", "MVN (m-backdoor)", "Amelia (m-backdoor)", "MICE (m-backdoor)")
 agg$method_pretty = factor(agg$method_pretty, levels = correct_order)
-levels(agg$method_pretty)
+table(agg$method_pretty)
 
 
 
